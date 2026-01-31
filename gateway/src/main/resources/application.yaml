@@ -13,6 +13,13 @@ spring:
               filters:
                 - TokenRelay= # Repassa o token para o serviço de destino
 
+            - id: catalog-api
+              uri: lb://catalog
+              predicates:
+                - Path=/catalog/**
+              filters:
+                - TokenRelay=
+
 
   security:
     oauth2:
