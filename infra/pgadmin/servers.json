@@ -1,0 +1,22 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Keycloak DB",
+      "Group": "Databases",
+      "Port": 5432,
+      "Username": "keycloak",
+      "Host": "keycloak-db",
+      "MaintenanceDB": "keycloak",
+      "SSLMode": "prefer"
+    },
+    "2": {
+      "Name": "Cinema DB",
+      "Group": "Databases",
+      "Port": 5432,
+      "Username": "cinema",
+      "Host": "postgres",
+      "MaintenanceDB": "postgres",
+      "SSLMode": "prefer"
+    }
+  }
+}
