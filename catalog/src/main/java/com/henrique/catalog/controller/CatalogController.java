@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("catalog")
+@RequestMapping()
 public class CatalogController {
 
     @GetMapping("health")
