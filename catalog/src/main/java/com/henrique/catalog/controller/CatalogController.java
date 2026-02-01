@@ -1,5 +1,7 @@
 package com.henrique.catalog.controller;
 
+import com.henrique.catalog.infra.padronize.SuccessListDataResponse;
+import com.henrique.catalog.infra.padronize.SuccessResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -34,14 +37,17 @@ public class CatalogController {
             // Aqui você poderia buscar dados específicos do usuário no banco
             // ex: service.getRecommendations(userId);
 
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(new SuccessResponse(response));
         }
 
         // --- CENÁRIO 2: ACESSO PÚBLICO ---
         response.put("status", "Public");
         response.put("message", "Acesso anônimo. Mostrando catálogo genérico.");
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new SuccessListDataResponse(List.of(response),
+                5L,
+                5L,
+                200L));
     }
 
 }
