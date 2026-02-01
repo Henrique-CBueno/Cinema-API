@@ -6,12 +6,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record SuccessListDataResponse(List<?> data,
-                                      Long page,
-                                      Long pageSize,
+                                      Integer page,
+                                      Integer pageSize,
                                       Long totalElements,
                                       @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
                                       LocalDateTime timestamp) {
-    public SuccessListDataResponse(List<?> data, Long page, Long pageSize, Long totalElements) {
+    public SuccessListDataResponse(List<?> data, Integer page, Integer pageSize, Long totalElements) {
         this(data,
                 page,
                 pageSize,

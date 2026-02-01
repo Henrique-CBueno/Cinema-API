@@ -5,12 +5,12 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
 
 public record ErrorGlobalResponse(String error,
-                                  String message,
+                                  String status,
                                   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
                                   LocalDateTime timestamp) {
-    public ErrorGlobalResponse(String message, String error) {
+    public ErrorGlobalResponse(String status, String error) {
         this(error,
-                message,
+                status,
                 LocalDateTime.now());
     }
 }

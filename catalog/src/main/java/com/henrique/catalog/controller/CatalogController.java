@@ -45,8 +45,8 @@ public class CatalogController {
         response.put("message", "Acesso anônimo. Mostrando catálogo genérico.");
 
         return ResponseEntity.ok(new SuccessListDataResponse(List.of(response),
-                5L,
-                5L,
+                5,
+                5,
                 200L));
     }
 
