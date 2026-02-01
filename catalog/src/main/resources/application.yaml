@@ -9,6 +9,12 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+    # Garante que o script rode DEPOIS que o Hibernate criar as tabelas
+    defer-datasource-initialization: true
+  # Força a execução do script sempre
+  sql:
+    init:
+      mode: always
 
 eureka:
   instance:

@@ -17,4 +17,22 @@ public interface MovieRepository extends JpaRepository<MovieEntity, UUID> {
     @Transactional
     @Query("UPDATE MovieEntity m SET m.active = false WHERE m.id = :id")
     int softDeleteById(@Param("id") UUID id);
+
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query("""
+        UPDATE MovieEntity m SET
+        m.title = COALESCE(:title, m.title),
+        m.description = COALESCE(:description, m.description),
+        m.durationMinutes = COALESCE(:duration, m.durationMinutes),
+        m.rating = COALESCE(:rating, m.rating)
+        WHERE m.id = :id
+    """)
+    int updatePartial(
+            @Param("id") UUID id,
+            @Param("title") String title,
+            @Param("description") String description,
+            @Param("duration") Integer duration,
+            @Param("rating") String rating
+    );
 }

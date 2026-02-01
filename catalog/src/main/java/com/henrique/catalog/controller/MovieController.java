@@ -2,6 +2,7 @@ package com.henrique.catalog.controller;
 
 import com.henrique.catalog.domain.dto.global.PaginationParams;
 import com.henrique.catalog.domain.dto.req.movie.CreateMovieReqDTO;
+import com.henrique.catalog.domain.dto.req.movie.UpdateMovieReqDTO;
 import com.henrique.catalog.domain.dto.res.movie.MovieResDTO;
 import com.henrique.catalog.infra.padronize.SuccessListDataResponse;
 import com.henrique.catalog.infra.padronize.SuccessResponse;
@@ -68,5 +69,13 @@ public class MovieController {
 
         movieService.deleteMovieById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("{id}")
+    public ResponseEntity<SuccessResponse> partialUpdateMovie(@PathVariable UUID id,
+                                                              @RequestBody UpdateMovieReqDTO dto) {
+
+        MovieResDTO updatedMovie = movieService.updatePartialMovie(id, dto);
+        return ResponseEntity.ok(new SuccessResponse(updatedMovie));
     }
 }
