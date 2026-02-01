@@ -2,6 +2,7 @@ package com.bsys.gateway.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -17,6 +18,8 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.POST, "/catalog/movies").hasRole("GATEWAY_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/catalog/movies").hasRole("GATEWAY_ADMIN")
                         .requestMatchers("/hello/**").hasRole("GATEWAY_ADMIN")
                         .requestMatchers("/catalog/**").permitAll()
                         .anyRequest().authenticated()
