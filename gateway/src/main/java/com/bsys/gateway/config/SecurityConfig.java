@@ -19,7 +19,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/catalog/movies").hasRole("GATEWAY_ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/catalog/movies").hasRole("GATEWAY_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/catalog/movies/{id}").hasRole("GATEWAY_ADMIN")
                         .requestMatchers("/hello/**").hasRole("GATEWAY_ADMIN")
                         .requestMatchers("/catalog/**").permitAll()
                         .anyRequest().authenticated()
