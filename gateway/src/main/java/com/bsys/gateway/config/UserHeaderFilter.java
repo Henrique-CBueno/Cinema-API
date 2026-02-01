@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -15,23 +16,28 @@ import java.io.IOException;
 
 @Component
 public class UserHeaderFilter extends OncePerRequestFilter {
+
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
-        // 1. Pega a autenticação do contexto atual
+        // Envolve a requisição para permitir saneamento e sobrescrita controlada de headers
+        HeaderMapRequestWrapper requestWrapper = new HeaderMapRequestWrapper(request);
+
+        // Remove headers sensíveis enviados pelo cliente (evita spoofing)
+        requestWrapper.removeHeader("X-User-Id");
+        requestWrapper.removeHeader("X-User-Email");
+        requestWrapper.removeHeader("X-User-Name");
+
+        // Obtém autenticação (se houver)
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        // 2. Verifica se é um Token JWT válido
         if (authentication instanceof JwtAuthenticationToken jwtToken) {
             Jwt jwt = jwtToken.getToken();
 
-            // 3. Cria o wrapper para poder adicionar headers
-            HeaderMapRequestWrapper requestWrapper = new HeaderMapRequestWrapper(request);
-
-            // 4. Extrai os dados do JSON do Token e injeta nos headers
+            // Injeta valores confiáveis vindos do JWT
             String userId = jwt.getClaimAsString("sub");
             String email = jwt.getClaimAsString("email");
             String username = jwt.getClaimAsString("preferred_username");
@@ -39,12 +45,9 @@ public class UserHeaderFilter extends OncePerRequestFilter {
             if (userId != null) requestWrapper.addHeader("X-User-Id", userId);
             if (email != null) requestWrapper.addHeader("X-User-Email", email);
             if (username != null) requestWrapper.addHeader("X-User-Name", username);
-
-            // 5. Passa a requisição MODIFICADA para frente
-            filterChain.doFilter(requestWrapper, response);
-        } else {
-            // Se não tiver token (anonimo), passa a requisição ORIGINAL
-            filterChain.doFilter(request, response);
         }
+
+        // Encaminha sempre o wrapper: sem autenticação, headers chegam nulos; com JWT, chegam preenchidos
+        filterChain.doFilter(requestWrapper, response);
     }
 }
