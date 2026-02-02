@@ -39,7 +39,7 @@ public class MovieController {
         return ResponseEntity.ok(new SuccessListDataResponse(allMovies.getContent(),
                 allMovies.getNumber(),
                 allMovies.getSize(),
-                (long) allMovies.getNumberOfElements()));
+                allMovies.getTotalElements()));
     }
 
     @GetMapping("{id}")
