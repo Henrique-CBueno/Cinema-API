@@ -4,6 +4,7 @@ import com.henrique.catalog.domain.dto.global.PaginationParams;
 import com.henrique.catalog.domain.dto.res.cinema.CinemaResDTO;
 import com.henrique.catalog.factory.CinemaFactory;
 import com.henrique.catalog.infra.padronize.SuccessListDataResponse;
+import com.henrique.catalog.infra.padronize.SuccessResponse;
 import com.henrique.catalog.service.CinemaService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -20,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -36,6 +38,9 @@ class CinemaControllerTest {
 
     @Captor
     ArgumentCaptor<PageRequest> paginationCapture;
+
+    @Captor
+    ArgumentCaptor<UUID> uuidCapture;
 
     @Nested
     class GetAllCinemas {
@@ -173,4 +178,98 @@ class CinemaControllerTest {
             verify(cinemaService, times(2)).getAllCinemas(any());
         }
     }
+
+
+    @Nested
+    class GetCinemaById {
+
+        @Test
+        void shouldReturnHttpOK() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            CinemaResDTO cinemaDTO = CinemaFactory.createCinemaResponseDTO(cinemaId, "Cinemark", "São Paulo");
+
+            when(cinemaService.getCinemaById(cinemaId))
+                    .thenReturn(cinemaDTO);
+
+            // Act
+            ResponseEntity<SuccessResponse> response = cinemaController.getCinemaById(cinemaId);
+
+            // Assert
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+        }
+
+        @Test
+        void shouldPassCorrectParametersToService() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            CinemaResDTO cinemaDTO = CinemaFactory.createCinemaResponseDTO(cinemaId, "UCI", "Rio de Janeiro");
+
+            when(cinemaService.getCinemaById(uuidCapture.capture()))
+                    .thenReturn(cinemaDTO);
+
+            // Act
+            ResponseEntity<SuccessResponse> response = cinemaController.getCinemaById(cinemaId);
+
+            // Assert
+            assertEquals(cinemaId, uuidCapture.getValue());
+            assertEquals(1, uuidCapture.getAllValues().size());
+        }
+
+        @Test
+        void shouldReturnCorrectResponseBody() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            CinemaResDTO cinemaDTO = CinemaFactory.createCinemaResponseDTO(cinemaId, "Kinoplex", "Brasília");
+            var expectedResponse = ResponseEntity.ok(new SuccessResponse(cinemaDTO));
+
+            when(cinemaService.getCinemaById(cinemaId))
+                    .thenReturn(cinemaDTO);
+
+            // Act
+            ResponseEntity<SuccessResponse> response = cinemaController.getCinemaById(cinemaId);
+
+            // Assert
+            assertEquals(expectedResponse.getStatusCode(), response.getStatusCode());
+            assertThat(response)
+                    .usingRecursiveComparison()
+                    .ignoringFields("body.timestamp")
+                    .isEqualTo(expectedResponse);
+        }
+
+        @Test
+        void shouldReturnCinemaWithCorrectId() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            CinemaResDTO cinemaDTO = CinemaFactory.createCinemaResponseDTO(cinemaId, "Cinépolis", "Curitiba");
+
+            when(cinemaService.getCinemaById(cinemaId))
+                    .thenReturn(cinemaDTO);
+
+            // Act
+            ResponseEntity<SuccessResponse> response = cinemaController.getCinemaById(cinemaId);
+
+            // Assert
+            assertNotNull(response.getBody());
+            CinemaResDTO returnedCinema = (CinemaResDTO) response.getBody().data();
+            assertEquals(cinemaId, returnedCinema.id());
+        }
+
+        @Test
+        void shouldCallServiceOnce() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            CinemaResDTO cinemaDTO = CinemaFactory.createCinemaResponseDTO(cinemaId, "Cine Araújo", "Belo Horizonte");
+
+            when(cinemaService.getCinemaById(any()))
+                    .thenReturn(cinemaDTO);
+
+            // Act
+            cinemaController.getCinemaById(cinemaId);
+
+            // Assert
+            verify(cinemaService, times(1)).getCinemaById(cinemaId);
+        }
+    }
+
 }

@@ -4,6 +4,7 @@ import com.henrique.catalog.domain.dto.res.cinema.CinemaResDTO;
 import com.henrique.catalog.domain.entity.CinemaEntity;
 import com.henrique.catalog.domain.mapper.CinemaMapper;
 import com.henrique.catalog.factory.CinemaFactory;
+import com.henrique.catalog.infra.exceptions.NotFoundException;
 import com.henrique.catalog.repository.CinemaRepository;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -156,6 +158,112 @@ class CinemaServiceTest {
             assertEquals(1, result.getNumber());
             assertEquals(5, result.getSize());
             verify(cinemaRepository, times(1)).findAll(pageable);
+        }
+    }
+
+    @Nested
+    class GetCinemaById {
+
+        @Test
+        void shouldReturnCinemaDTOWhenCinemaExists() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            CinemaEntity entity = CinemaFactory.createCinemaEntity(cinemaId, "Cinemark", "São Paulo");
+            CinemaResDTO dto = CinemaFactory.createCinemaResponseDTO(cinemaId, "Cinemark", "São Paulo");
+
+            when(cinemaRepository.findById(cinemaId))
+                    .thenReturn(Optional.of(entity));
+            when(cinemaMapper.toDTO(entity))
+                    .thenReturn(dto);
+
+            // Act
+            CinemaResDTO result = cinemaService.getCinemaById(cinemaId);
+
+            // Assert
+            assertNotNull(result);
+            assertEquals(cinemaId, result.id());
+            assertEquals("Cinemark", result.name());
+            assertEquals("São Paulo", result.city());
+            verify(cinemaRepository, times(1)).findById(cinemaId);
+            verify(cinemaMapper, times(1)).toDTO(entity);
+        }
+
+        @Test
+        void shouldThrowNotFoundExceptionWhenCinemaDoesNotExist() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+
+            when(cinemaRepository.findById(cinemaId))
+                    .thenReturn(Optional.empty());
+
+            // Act & Assert
+            assertThrows(NotFoundException.class, () -> {
+                cinemaService.getCinemaById(cinemaId);
+            });
+            verify(cinemaRepository, times(1)).findById(cinemaId);
+            verify(cinemaMapper, never()).toDTO(any());
+        }
+
+        @Test
+        void shouldThrowNotFoundExceptionWithCorrectMessageFormat() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+
+            when(cinemaRepository.findById(cinemaId))
+                    .thenReturn(Optional.empty());
+
+            // Act & Assert
+            NotFoundException exception = assertThrows(NotFoundException.class, () -> {
+                cinemaService.getCinemaById(cinemaId);
+            });
+            assertNotNull(exception.getMessage());
+            assertTrue(exception.getMessage().contains(cinemaId.toString()));
+        }
+
+        @Test
+        void shouldMapEntityToDTOCorrectly() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            CinemaEntity entity = CinemaFactory.createCinemaEntity(cinemaId, "UCI Cinemas", "Rio de Janeiro");
+            CinemaResDTO dto = CinemaFactory.createCinemaResponseDTO(cinemaId, "UCI Cinemas", "Rio de Janeiro");
+
+            when(cinemaRepository.findById(cinemaId))
+                    .thenReturn(Optional.of(entity));
+            when(cinemaMapper.toDTO(entity))
+                    .thenReturn(dto);
+
+            // Act
+            CinemaResDTO result = cinemaService.getCinemaById(cinemaId);
+
+            // Assert
+            assertEquals(entity.getName(), result.name());
+            assertEquals(entity.getCity(), result.city());
+        }
+
+        @Test
+        void shouldHandleDifferentCinemaIds() {
+            // Arrange
+            UUID cinemaId1 = UUID.randomUUID();
+            UUID cinemaId2 = UUID.randomUUID();
+            CinemaEntity entity1 = CinemaFactory.createCinemaEntity(cinemaId1, "Cinema 1", "Cidade 1");
+            CinemaEntity entity2 = CinemaFactory.createCinemaEntity(cinemaId2, "Cinema 2", "Cidade 2");
+            CinemaResDTO dto1 = CinemaFactory.createCinemaResponseDTO(cinemaId1, "Cinema 1", "Cidade 1");
+            CinemaResDTO dto2 = CinemaFactory.createCinemaResponseDTO(cinemaId2, "Cinema 2", "Cidade 2");
+
+            when(cinemaRepository.findById(cinemaId1)).thenReturn(Optional.of(entity1));
+            when(cinemaRepository.findById(cinemaId2)).thenReturn(Optional.of(entity2));
+            when(cinemaMapper.toDTO(entity1)).thenReturn(dto1);
+            when(cinemaMapper.toDTO(entity2)).thenReturn(dto2);
+
+            // Act
+            CinemaResDTO result1 = cinemaService.getCinemaById(cinemaId1);
+            CinemaResDTO result2 = cinemaService.getCinemaById(cinemaId2);
+
+            // Assert
+            assertEquals(cinemaId1, result1.id());
+            assertEquals(cinemaId2, result2.id());
+            assertEquals("Cinema 1", result1.name());
+            assertEquals("Cinema 2", result2.name());
         }
     }
 }

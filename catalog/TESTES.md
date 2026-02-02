@@ -132,6 +132,13 @@ Arquivo: [src/test/java/com/henrique/catalog/service/CinemaServiceTest.java](src
 - Mapeia todas as entidades corretamente.
 - Respeita parâmetros do `Pageable` (page number e size).
 
+### `getCinemaById(UUID)`
+- Retorna `CinemaResDTO` quando o cinema existe.
+- Lança `NotFoundException` quando não existe.
+- Mensagem de erro contém o `id` solicitado.
+- Mapeia entidade para DTO corretamente.
+- Suporta diferentes IDs de cinema.
+
 ---
 
 ## CinemaControllerTest
@@ -145,6 +152,13 @@ Arquivo: [src/test/java/com/henrique/catalog/controller/CinemaControllerTest.jav
 - Retorna tamanho correto do conteúdo.
 - Chama serviço uma única vez.
 - Suporta diferentes tamanhos de página.
+
+### `getCinemaById(UUID)`
+- Retorna **200 OK**.
+- Envia `id` correto ao serviço.
+- Retorna corpo correto (comparação ignorando `timestamp`).
+- Retorna cinema com `id` correto.
+- Chama serviço uma única vez.
 
 ---
 
