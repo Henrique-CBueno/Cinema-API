@@ -154,6 +154,6 @@ Arquivo: [src/test/java/com/henrique/catalog/domain/mapper/CinemaMapperTest.java
 ### `toDTO(CinemaEntity)`
 - Mapeia entidade para DTO de resposta.
 - Retorna `null` quando a entidade é `null`.
-- Mapeia todos os campos corretamente.
+- Mapeia todos os campos corretamente (incluindo `id`).
 - Mapeia diferentes entidades de cinema.
-- Não mapeia `id` para o DTO (DTO não possui campo `id`).
+- Mapeia `id` corretamente para o DTO.

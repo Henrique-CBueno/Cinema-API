@@ -34,6 +34,7 @@ class CinemaMapperTest {
 
             // Assert
             assertNotNull(response);
+            assertEquals(entity.getId(), response.id());
             assertEquals(entity.getName(), response.name());
             assertEquals(entity.getCity(), response.city());
         }
@@ -59,6 +60,8 @@ class CinemaMapperTest {
             CinemaResDTO response = cinemaMapper.toDTO(entity);
 
             // Assert
+            assertNotNull(response.id());
+            assertEquals(entity.getId(), response.id());
             assertEquals("UCI Cinemas", response.name());
             assertEquals("Rio de Janeiro", response.city());
         }
@@ -74,14 +77,16 @@ class CinemaMapperTest {
             CinemaResDTO response2 = cinemaMapper.toDTO(cinema2);
 
             // Assert
+            assertEquals(cinema1.getId(), response1.id());
             assertEquals("Kinoplex", response1.name());
             assertEquals("Brasília", response1.city());
+            assertEquals(cinema2.getId(), response2.id());
             assertEquals("Cine Araújo", response2.name());
             assertEquals("Belo Horizonte", response2.city());
         }
 
         @Test
-        void shouldNotMapIdToDTO() {
+        void shouldMapIdToDTO() {
             // Arrange
             UUID specificId = UUID.randomUUID();
             CinemaEntity entity = CinemaFactory.createCinemaEntity(specificId, "Cinépolis", "Curitiba");
@@ -91,9 +96,9 @@ class CinemaMapperTest {
 
             // Assert
             assertNotNull(response);
+            assertEquals(specificId, response.id());
             assertEquals("Cinépolis", response.name());
             assertEquals("Curitiba", response.city());
-            // O DTO não tem campo ID, confirmando que não é mapeado
         }
     }
 }

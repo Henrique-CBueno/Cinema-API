@@ -1,5 +1,8 @@
 package com.henrique.catalog.domain.dto.res.cinema;
 
-public record CinemaResDTO(String name,
+import java.util.UUID;
+
+public record CinemaResDTO(UUID id,
+                           String name,
                            String city) {
 }

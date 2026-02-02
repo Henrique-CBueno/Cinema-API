@@ -38,10 +38,14 @@ public class CinemaFactory {
     }
 
     public static CinemaResDTO createCinemaResponseDTO() {
-        return new CinemaResDTO(DEFAULT_NAME, DEFAULT_CITY);
+        return new CinemaResDTO(UUID.randomUUID(), DEFAULT_NAME, DEFAULT_CITY);
+    }
+
+    public static CinemaResDTO createCinemaResponseDTO(UUID id, String name, String city) {
+        return new CinemaResDTO(id, name, city);
     }
 
     public static CinemaResDTO createCinemaResponseDTO(String name, String city) {
-        return new CinemaResDTO(name, city);
+        return new CinemaResDTO(UUID.randomUUID(), name, city);
     }
 }
