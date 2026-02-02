@@ -8,6 +8,9 @@ Test files:
 - [src/test/java/com/henrique/catalog/controller/MovieControllerTest.java](src/test/java/com/henrique/catalog/controller/MovieControllerTest.java)
 - [src/test/java/com/henrique/catalog/infra/exceptionHandler/GlobalExceptionHandlerTest.java](src/test/java/com/henrique/catalog/infra/exceptionHandler/GlobalExceptionHandlerTest.java)
 - [src/test/java/com/henrique/catalog/domain/mapper/MovieMapperTest.java](src/test/java/com/henrique/catalog/domain/mapper/MovieMapperTest.java)
+- [src/test/java/com/henrique/catalog/service/CinemaServiceTest.java](src/test/java/com/henrique/catalog/service/CinemaServiceTest.java)
+- [src/test/java/com/henrique/catalog/controller/CinemaControllerTest.java](src/test/java/com/henrique/catalog/controller/CinemaControllerTest.java)
+- [src/test/java/com/henrique/catalog/domain/mapper/CinemaMapperTest.java](src/test/java/com/henrique/catalog/domain/mapper/CinemaMapperTest.java)
 
 ---
 
@@ -116,3 +119,41 @@ Arquivo: [src/test/java/com/henrique/catalog/domain/mapper/MovieMapperTest.java]
 - Retorna `null` quando o DTO é `null`.
 - Não mapeia `id` ao criar entidade.
 - Não mapeia `createdByUserId` ao criar entidade.
+
+---
+
+## CinemaServiceTest
+Arquivo: [src/test/java/com/henrique/catalog/service/CinemaServiceTest.java](src/test/java/com/henrique/catalog/service/CinemaServiceTest.java)
+
+### `getAllCinemas(Pageable)`
+- Retorna página com itens quando existem cinemas.
+- Retorna página vazia quando não há cinemas.
+- Retorna múltiplos cinemas respeitando paginação.
+- Mapeia todas as entidades corretamente.
+- Respeita parâmetros do `Pageable` (page number e size).
+
+---
+
+## CinemaControllerTest
+Arquivo: [src/test/java/com/henrique/catalog/controller/CinemaControllerTest.java](src/test/java/com/henrique/catalog/controller/CinemaControllerTest.java)
+
+### `getAllCinemas(PaginationParams)`
+- Retorna **200 OK** quando há itens.
+- Retorna **204 NO_CONTENT** quando a lista está vazia.
+- Envia parâmetros corretos de paginação ao serviço.
+- Retorna corpo correto (comparação ignorando `timestamp`).
+- Retorna tamanho correto do conteúdo.
+- Chama serviço uma única vez.
+- Suporta diferentes tamanhos de página.
+
+---
+
+## CinemaMapperTest
+Arquivo: [src/test/java/com/henrique/catalog/domain/mapper/CinemaMapperTest.java](src/test/java/com/henrique/catalog/domain/mapper/CinemaMapperTest.java)
+
+### `toDTO(CinemaEntity)`
+- Mapeia entidade para DTO de resposta.
+- Retorna `null` quando a entidade é `null`.
+- Mapeia todos os campos corretamente.
+- Mapeia diferentes entidades de cinema.
+- Não mapeia `id` para o DTO (DTO não possui campo `id`).
