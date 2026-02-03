@@ -139,6 +139,13 @@ Arquivo: [src/test/java/com/henrique/catalog/service/CinemaServiceTest.java](src
 - Mapeia entidade para DTO corretamente.
 - Suporta diferentes IDs de cinema.
 
+### `createCinema(CreateCinemaReqDTO, UUID)`
+- Cria cinema com sucesso e retorna `UUID`.
+- Define `createdByUserId` com o usuário informado.
+- Lança `DuplicateResourceException` em violação de unicidade (nome e cidade).
+- Mapeia DTO para entidade corretamente.
+- Retorna o `UUID` do cinema criado.
+
 ---
 
 ## CinemaControllerTest
@@ -160,14 +167,26 @@ Arquivo: [src/test/java/com/henrique/catalog/controller/CinemaControllerTest.jav
 - Retorna cinema com `id` correto.
 - Chama serviço uma única vez.
 
+### `createCinema(CreateCinemaReqDTO, String)`
+- Retorna **201 CREATED**.
+- Envia `dto` e `userId` corretos ao serviço.
+- Retorna `Location` com o `id` criado.
+- Suporta criação com dados diferentes.
+
 ---
 
 ## CinemaMapperTest
 Arquivo: [src/test/java/com/henrique/catalog/domain/mapper/CinemaMapperTest.java](src/test/java/com/henrique/catalog/domain/mapper/CinemaMapperTest.java)
 
 ### `toDTO(CinemaEntity)`
-- Mapeia entidade para DTO de resposta.
+- Mapeia todos os campos da entidade para o DTO.
 - Retorna `null` quando a entidade é `null`.
-- Mapeia todos os campos corretamente (incluindo `id`).
-- Mapeia diferentes entidades de cinema.
-- Mapeia `id` corretamente para o DTO.
+- Mapeia o `id` da entidade para o `id` do DTO.
+- Mantém integridade dos dados (`name`, `city`).
+
+### `toEntity(CreateCinemaReqDTO)`
+- Mapeia todos os campos do DTO para a entidade (`name`, `city`).
+- Retorna `null` quando o DTO é `null`.
+- Mapeia corretamente diferentes DTOs de cinema.
+- Mantém integridade dos dados (`name`, `city`).
+- Ignora campos gerados/gerenciados (`id`, `createdByUserId`, `active`, `createdAt`).

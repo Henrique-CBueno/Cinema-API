@@ -1,5 +1,6 @@
 package com.henrique.catalog.domain.mapper;
 
+import com.henrique.catalog.domain.dto.req.cinema.CreateCinemaReqDTO;
 import com.henrique.catalog.domain.dto.res.cinema.CinemaResDTO;
 import com.henrique.catalog.domain.entity.CinemaEntity;
 import com.henrique.catalog.factory.CinemaFactory;
@@ -100,5 +101,80 @@ class CinemaMapperTest {
             assertEquals("Cinépolis", response.name());
             assertEquals("Curitiba", response.city());
         }
+    }
+
+    @Nested
+    class toEntity {
+
+        @Test
+        void shouldMapCreateDTOToEntity() {
+            // Arrange
+            CreateCinemaReqDTO dto = CinemaFactory.createCinemaRequestDTO("Cine Belas Artes", "São Paulo");
+
+            // Act
+            CinemaEntity entity = cinemaMapper.toEntity(dto);
+
+            // Assert
+            assertNotNull(entity);
+            assertEquals(dto.name(), entity.getName());
+            assertEquals(dto.city(), entity.getCity());
+        }
+
+        @Test
+        void shouldMapAllFieldsCorrectly() {
+            // Arrange
+            CreateCinemaReqDTO dto = CinemaFactory.createCinemaRequestDTO("UCI Cinemas", "Rio de Janeiro");
+
+            // Act
+            CinemaEntity entity = cinemaMapper.toEntity(dto);
+
+            // Assert
+            assertNotNull(entity);
+            assertEquals("UCI Cinemas", entity.getName());
+            assertEquals("Rio de Janeiro", entity.getCity());
+        }
+
+        @Test
+        void shouldMapDifferentCinemaDTOs() {
+            // Arrange
+            CreateCinemaReqDTO dto1 = CinemaFactory.createCinemaRequestDTO("Kinoplex", "Brasília");
+            CreateCinemaReqDTO dto2 = CinemaFactory.createCinemaRequestDTO("Cine Araújo", "Belo Horizonte");
+
+            // Act
+            CinemaEntity entity1 = cinemaMapper.toEntity(dto1);
+            CinemaEntity entity2 = cinemaMapper.toEntity(dto2);
+
+            // Assert
+            assertEquals("Kinoplex", entity1.getName());
+            assertEquals("Brasília", entity1.getCity());
+            assertEquals("Cine Araújo", entity2.getName());
+            assertEquals("Belo Horizonte", entity2.getCity());
+        }
+
+        @Test
+        void shouldReturnNullWhenDTOIsNull() {
+            // Arrange
+            CreateCinemaReqDTO dto = null;
+
+            // Act
+            CinemaEntity entity = cinemaMapper.toEntity(dto);
+
+            // Assert
+            assertNull(entity);
+        }
+
+        @Test
+        void shouldIgnoreGeneratedFields() {
+            // Arrange
+            CreateCinemaReqDTO dto = CinemaFactory.createCinemaRequestDTO("Cinépolis", "Curitiba");
+
+            // Act
+            CinemaEntity entity = cinemaMapper.toEntity(dto);
+
+            // Assert
+            assertNull(entity.getId());
+            assertNull(entity.getCreatedByUserId());
+        }
+
     }
 }

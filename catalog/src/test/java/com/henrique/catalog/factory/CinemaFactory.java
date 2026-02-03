@@ -1,5 +1,6 @@
 package com.henrique.catalog.factory;
 
+import com.henrique.catalog.domain.dto.req.cinema.CreateCinemaReqDTO;
 import com.henrique.catalog.domain.dto.res.cinema.CinemaResDTO;
 import com.henrique.catalog.domain.entity.CinemaEntity;
 
@@ -47,5 +48,13 @@ public class CinemaFactory {
 
     public static CinemaResDTO createCinemaResponseDTO(String name, String city) {
         return new CinemaResDTO(UUID.randomUUID(), name, city);
+    }
+
+    public static CreateCinemaReqDTO createCinemaRequestDTO() {
+        return new CreateCinemaReqDTO(DEFAULT_NAME, DEFAULT_CITY);
+    }
+
+    public static CreateCinemaReqDTO createCinemaRequestDTO(String name, String city) {
+        return new CreateCinemaReqDTO(name, city);
     }
 }

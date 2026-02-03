@@ -4,6 +4,7 @@ import com.henrique.catalog.domain.dto.res.cinema.CinemaResDTO;
 import com.henrique.catalog.domain.entity.CinemaEntity;
 import com.henrique.catalog.domain.mapper.CinemaMapper;
 import com.henrique.catalog.factory.CinemaFactory;
+import com.henrique.catalog.infra.exceptions.DuplicateResourceException;
 import com.henrique.catalog.infra.exceptions.NotFoundException;
 import com.henrique.catalog.repository.CinemaRepository;
 import org.junit.jupiter.api.Nested;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -264,6 +266,111 @@ class CinemaServiceTest {
             assertEquals(cinemaId2, result2.id());
             assertEquals("Cinema 1", result1.name());
             assertEquals("Cinema 2", result2.name());
+        }
+    }
+
+    @Nested
+    class CreateCinema {
+
+        @Test
+        void shouldCreateCinemaSuccessfully() {
+            // Arrange
+            UUID userId = UUID.randomUUID();
+            var requestDTO = CinemaFactory.createCinemaRequestDTO();
+            var entity = CinemaFactory.createCinemaEntity(requestDTO.name(), requestDTO.city());
+
+            when(cinemaMapper.toEntity(requestDTO))
+                    .thenReturn(entity);
+            when(cinemaRepository.saveAndFlush(any(CinemaEntity.class)))
+                    .thenReturn(entity);
+
+            // Act
+            UUID result = cinemaService.createCinema(requestDTO, userId);
+
+            // Assert
+            assertNotNull(result);
+            assertEquals(entity.getId(), result);
+            verify(cinemaMapper, times(1)).toEntity(requestDTO);
+            verify(cinemaRepository, times(1)).saveAndFlush(any(CinemaEntity.class));
+        }
+
+        @Test
+        void shouldSetCreatedByUserIdWhenCreatingCinema() {
+            // Arrange
+            UUID userId = UUID.randomUUID();
+            var requestDTO = CinemaFactory.createCinemaRequestDTO();
+            var entity = CinemaFactory.createCinemaEntity(requestDTO.name(), requestDTO.city());
+
+            when(cinemaMapper.toEntity(requestDTO))
+                    .thenReturn(entity);
+            when(cinemaRepository.saveAndFlush(any(CinemaEntity.class)))
+                    .thenReturn(entity);
+
+            // Act
+            cinemaService.createCinema(requestDTO, userId);
+
+            // Assert
+            verify(cinemaRepository, times(1)).saveAndFlush(argThat(cinema ->
+                    cinema.getCreatedByUserId().equals(userId)
+            ));
+        }
+
+        @Test
+        void shouldThrowDuplicateResourceExceptionWhenNameAndCityDuplicate() {
+            // Arrange
+            UUID userId = UUID.randomUUID();
+            var requestDTO = CinemaFactory.createCinemaRequestDTO();
+            var entity = CinemaFactory.createCinemaEntity(requestDTO.name(), requestDTO.city());
+
+            when(cinemaMapper.toEntity(requestDTO))
+                    .thenReturn(entity);
+            when(cinemaRepository.saveAndFlush(any(CinemaEntity.class)))
+                    .thenThrow(new DataIntegrityViolationException("Duplicate"));
+
+            // Act & Assert
+            assertThrows(DuplicateResourceException.class, () -> {
+                cinemaService.createCinema(requestDTO, userId);
+            });
+            verify(cinemaRepository, times(1)).saveAndFlush(any(CinemaEntity.class));
+        }
+
+        @Test
+        void shouldMapDTOToEntityCorrectly() {
+            // Arrange
+            UUID userId = UUID.randomUUID();
+            var requestDTO = CinemaFactory.createCinemaRequestDTO("Cinépolis", "Curitiba");
+            var entity = CinemaFactory.createCinemaEntity(requestDTO.name(), requestDTO.city());
+
+            when(cinemaMapper.toEntity(requestDTO))
+                    .thenReturn(entity);
+            when(cinemaRepository.saveAndFlush(any(CinemaEntity.class)))
+                    .thenReturn(entity);
+
+            // Act
+            cinemaService.createCinema(requestDTO, userId);
+
+            // Assert
+            verify(cinemaMapper, times(1)).toEntity(requestDTO);
+        }
+
+        @Test
+        void shouldReturnUUIDOfCreatedCinema() {
+            // Arrange
+            UUID userId = UUID.randomUUID();
+            UUID cinemaId = UUID.randomUUID();
+            var requestDTO = CinemaFactory.createCinemaRequestDTO();
+            var entity = CinemaFactory.createCinemaEntity(cinemaId, requestDTO.name(), requestDTO.city());
+
+            when(cinemaMapper.toEntity(requestDTO))
+                    .thenReturn(entity);
+            when(cinemaRepository.saveAndFlush(any(CinemaEntity.class)))
+                    .thenReturn(entity);
+
+            // Act
+            UUID result = cinemaService.createCinema(requestDTO, userId);
+
+            // Assert
+            assertEquals(cinemaId, result);
         }
     }
 }

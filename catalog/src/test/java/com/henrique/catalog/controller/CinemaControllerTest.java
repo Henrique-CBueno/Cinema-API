@@ -1,6 +1,7 @@
 package com.henrique.catalog.controller;
 
 import com.henrique.catalog.domain.dto.global.PaginationParams;
+import com.henrique.catalog.domain.dto.req.cinema.CreateCinemaReqDTO;
 import com.henrique.catalog.domain.dto.res.cinema.CinemaResDTO;
 import com.henrique.catalog.factory.CinemaFactory;
 import com.henrique.catalog.infra.padronize.SuccessListDataResponse;
@@ -19,6 +20,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.List;
 import java.util.UUID;
@@ -41,6 +45,12 @@ class CinemaControllerTest {
 
     @Captor
     ArgumentCaptor<UUID> uuidCapture;
+
+    @Captor
+    ArgumentCaptor<CreateCinemaReqDTO> createCinemaCaptor;
+
+    @Captor
+    ArgumentCaptor<UUID> userIdCaptor;
 
     @Nested
     class GetAllCinemas {
@@ -269,6 +279,109 @@ class CinemaControllerTest {
 
             // Assert
             verify(cinemaService, times(1)).getCinemaById(cinemaId);
+        }
+    }
+
+    @Nested
+    class CreateCinema {
+
+        @Test
+        void shouldReturnHttpCREATED() {
+            // Arrange
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRequestURI("/cinemas");
+            RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+            var dto = CinemaFactory.createCinemaRequestDTO();
+            UUID createdId = UUID.randomUUID();
+
+            when(cinemaService.createCinema(any(), any()))
+                    .thenReturn(createdId);
+
+            // Act
+            ResponseEntity<Void> response = cinemaController.createCinema(dto, UUID.randomUUID().toString());
+
+            // Assert
+            assertEquals(HttpStatus.CREATED, response.getStatusCode());
+            assertNotNull(response.getHeaders().getLocation());
+
+            // Cleanup
+            RequestContextHolder.resetRequestAttributes();
+        }
+
+        @Test
+        void shouldPassCorrectParametersToService() {
+            // Arrange
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRequestURI("/cinemas");
+            RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+            var dto = CinemaFactory.createCinemaRequestDTO();
+            UUID userId = UUID.randomUUID();
+            UUID createdId = UUID.randomUUID();
+
+            when(cinemaService.createCinema(createCinemaCaptor.capture(), userIdCaptor.capture()))
+                    .thenReturn(createdId);
+
+            // Act
+            ResponseEntity<Void> response = cinemaController.createCinema(dto, userId.toString());
+
+            // Assert
+            assertEquals(dto, createCinemaCaptor.getValue());
+            assertEquals(userId, userIdCaptor.getValue());
+            assertEquals(1, createCinemaCaptor.getAllValues().size());
+            assertEquals(1, userIdCaptor.getAllValues().size());
+
+            // Cleanup
+            RequestContextHolder.resetRequestAttributes();
+        }
+
+        @Test
+        void shouldReturnCorrectLocationHeader() {
+            // Arrange
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRequestURI("/cinemas");
+            RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+            var dto = CinemaFactory.createCinemaRequestDTO();
+            UUID createdId = UUID.randomUUID();
+
+            when(cinemaService.createCinema(any(), any()))
+                    .thenReturn(createdId);
+
+            // Act
+            ResponseEntity<Void> response = cinemaController.createCinema(dto, UUID.randomUUID().toString());
+
+            // Assert
+            assertNotNull(response.getHeaders().getLocation());
+            assertTrue(response.getHeaders().getLocation().toString().contains(createdId.toString()));
+
+            // Cleanup
+            RequestContextHolder.resetRequestAttributes();
+        }
+
+        @Test
+        void shouldCreateCinemaWithDifferentData() {
+            // Arrange
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRequestURI("/cinemas");
+            RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+            var dto = CinemaFactory.createCinemaRequestDTO("Cinépolis", "Brasília");
+            UUID createdId = UUID.randomUUID();
+
+            when(cinemaService.createCinema(createCinemaCaptor.capture(), any()))
+                    .thenReturn(createdId);
+
+            // Act
+            ResponseEntity<Void> response = cinemaController.createCinema(dto, UUID.randomUUID().toString());
+
+            // Assert
+            assertEquals("Cinépolis", createCinemaCaptor.getValue().name());
+            assertEquals("Brasília", createCinemaCaptor.getValue().city());
+
+            // Cleanup
+            RequestContextHolder.resetRequestAttributes();
         }
     }
 
