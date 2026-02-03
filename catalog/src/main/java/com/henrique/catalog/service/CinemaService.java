@@ -74,10 +74,23 @@ public class CinemaService {
             return cinemaRepository.findById(id)
                     .map(cinemaMapper::toDTO)
                     .orElseThrow(() -> new NotFoundException(
-                            String.format(ExceptionsConstants.MOVIE_DONT_EXISTS, id)
+                            String.format(
+                                    ExceptionsConstants.CINEMA_DONT_EXISTS,
+                                    id
+                            )
                     ));
         } catch (DataIntegrityViolationException e) {
             throw new DuplicateResourceException(ExceptionsConstants.DUPLICATE_RESOURCE, "name e city iguais");
         }
+    }
+
+    public void safeDeleteById(UUID id) {
+
+        int affectedRows = cinemaRepository.softDeleteById(id);
+
+        if (affectedRows < 1) throw new NotFoundException(String.format(
+                ExceptionsConstants.CINEMA_DONT_EXISTS,
+                id
+        ));
     }
 }

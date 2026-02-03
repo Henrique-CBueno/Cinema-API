@@ -13,13 +13,18 @@ import java.util.UUID;
 @Repository
 public interface CinemaRepository extends JpaRepository<CinemaEntity, UUID> {
 
+    @Modifying
+    @Transactional
+    @Query("UPDATE CinemaEntity c SET c.active = false WHERE c.id = :id")
+    int softDeleteById(@Param("id") UUID id);
+
     @Modifying(clearAutomatically = true)
     @Transactional
     @Query("""
-        UPDATE CinemaEntity m SET
-        m.name = COALESCE(:name, m.name),
-        m.city = COALESCE(:city, m.city)
-        WHERE m.id = :id
+        UPDATE CinemaEntity c SET
+        c.name = COALESCE(:name, c.name),
+        c.city = COALESCE(:city, c.city)
+        WHERE c.id = :id
     """)
     int updatePartial(
             @Param("id") UUID id,
