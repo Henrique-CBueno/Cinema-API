@@ -18,6 +18,13 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        // Swagger/OpenAPI - permitir acesso público
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
+                        
+                        // Documentação dos microsserviços - permitir acesso público
+                        .requestMatchers("/catalog/v3/api-docs/**", "/hello/v3/api-docs/**").permitAll()
+
+                        // Operações administrativas do catálogo - requerem GATEWAY_ADMIN
                         .requestMatchers(HttpMethod.POST, "/catalog/movies").hasRole("GATEWAY_ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/catalog/movies/{id}").hasRole("GATEWAY_ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/catalog/movies/{id}").hasRole("GATEWAY_ADMIN")
@@ -32,6 +39,7 @@ public class SecurityConfig {
 
                         .requestMatchers("/hello/**").hasRole("GATEWAY_ADMIN")
                         .requestMatchers("/catalog/**").permitAll()
+                        
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
