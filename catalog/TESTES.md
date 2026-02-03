@@ -153,6 +153,12 @@ Arquivo: [src/test/java/com/henrique/catalog/service/CinemaServiceTest.java](src
 - Atualiza cinema com dados parciais.
 - Lança `NotFoundException` se cinema não for encontrado após atualização.
 
+### `safeDeleteById(UUID)`
+- Exclui cinema com sucesso quando há linhas afetadas.
+- Lança `NotFoundException` quando não há linhas afetadas.
+- Mensagem de erro contém o `id` solicitado.
+- Lança `NotFoundException` quando retorno é negativo.
+
 ---
 
 ## CinemaControllerTest
@@ -186,6 +192,12 @@ Arquivo: [src/test/java/com/henrique/catalog/controller/CinemaControllerTest.jav
 - Envia `id` correto ao serviço.
 - Envia `UpdateCinemaReqDTO` correto ao serviço.
 - Atualiza cinema com valores diferentes.
+
+### `safeDeleteCinema(UUID)`
+- Retorna **204 NO_CONTENT**.
+- Envia `id` correto ao serviço.
+- Chama método de exclusão do serviço.
+- Suporta exclusão de diferentes IDs de cinema.
 
 ---
 

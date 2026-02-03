@@ -476,4 +476,64 @@ class CinemaServiceTest {
             verify(cinemaRepository, times(1)).findById(cinemaId);
         }
     }
+
+    @Nested
+    class SafeDeleteById {
+
+        @Test
+        void shouldDeleteCinemaSuccessfullyWhenAffectedRowsIsGreaterThanZero() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+
+            when(cinemaRepository.softDeleteById(cinemaId))
+                    .thenReturn(1);
+
+            // Act
+            cinemaService.safeDeleteById(cinemaId);
+
+            // Assert
+            verify(cinemaRepository, times(1)).softDeleteById(cinemaId);
+        }
+
+        @Test
+        void shouldThrowNotFoundExceptionWhenAffectedRowsIsZero() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+
+            when(cinemaRepository.softDeleteById(cinemaId))
+                    .thenReturn(0);
+
+            // Act & Assert
+            assertThrows(NotFoundException.class,
+                    () -> cinemaService.safeDeleteById(cinemaId));
+            verify(cinemaRepository, times(1)).softDeleteById(cinemaId);
+        }
+
+        @Test
+        void shouldIncludeCinemaIdInExceptionMessage() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+
+            when(cinemaRepository.softDeleteById(cinemaId))
+                    .thenReturn(0);
+
+            // Act & Assert
+            NotFoundException exception = assertThrows(NotFoundException.class,
+                    () -> cinemaService.safeDeleteById(cinemaId));
+            assertTrue(exception.getMessage().contains(cinemaId.toString()));
+        }
+
+        @Test
+        void shouldThrowNotFoundExceptionWhenAffectedRowsIsNegative() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+
+            when(cinemaRepository.softDeleteById(cinemaId))
+                    .thenReturn(-1);
+
+            // Act & Assert
+            assertThrows(NotFoundException.class,
+                    () -> cinemaService.safeDeleteById(cinemaId));
+        }
+    }
 }

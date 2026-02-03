@@ -482,4 +482,66 @@ class CinemaControllerTest {
         }
     }
 
+    @Nested
+    class SafeDeleteCinema {
+
+        @Test
+        void shouldDeleteCinemaWithHttpNO_CONTENT() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+
+            doNothing().when(cinemaService).safeDeleteById(cinemaId);
+
+            // Act
+            ResponseEntity<Void> response = cinemaController.safeDeleteMovie(cinemaId);
+
+            // Assert
+            assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        }
+
+        @Test
+        void shouldPassCorrectCinemaIdToService() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+
+            doNothing().when(cinemaService).safeDeleteById(uuidCapture.capture());
+
+            // Act
+            cinemaController.safeDeleteMovie(cinemaId);
+
+            // Assert
+            assertEquals(cinemaId, uuidCapture.getValue());
+        }
+
+        @Test
+        void shouldCallServiceDeleteMethod() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+
+            doNothing().when(cinemaService).safeDeleteById(cinemaId);
+
+            // Act
+            cinemaController.safeDeleteMovie(cinemaId);
+
+            // Assert
+            verify(cinemaService, times(1)).safeDeleteById(cinemaId);
+        }
+
+        @Test
+        void shouldDeleteDifferentCinemaIds() {
+            // Arrange
+            UUID cinemaId1 = UUID.randomUUID();
+            UUID cinemaId2 = UUID.randomUUID();
+
+            doNothing().when(cinemaService).safeDeleteById(any(UUID.class));
+
+            // Act
+            cinemaController.safeDeleteMovie(cinemaId1);
+            cinemaController.safeDeleteMovie(cinemaId2);
+
+            // Assert
+            verify(cinemaService, times(2)).safeDeleteById(any(UUID.class));
+        }
+    }
+
 }
