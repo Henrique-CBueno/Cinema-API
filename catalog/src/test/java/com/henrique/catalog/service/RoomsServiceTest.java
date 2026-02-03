@@ -382,7 +382,208 @@ class RoomsServiceTest {
             // Act & Assert
             DuplicateResourceException exception = assertThrows(DuplicateResourceException.class, () ->
                     roomsService.createRoomForCinemaId(cinemaId, dto, userId));
-            assertTrue(exception.getMessage().contains("name e city iguais"));
+            assertTrue(exception.getMessage().contains("Ja existe uma sala com o nome"));
+        }
+    }
+
+    @Nested
+    class UpdateRoom {
+
+        @Test
+        void shouldUpdateRoomSuccessfully() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            UUID roomId = UUID.randomUUID();
+            com.henrique.catalog.domain.dto.req.rooms.UpdateRoomReqDTO dto = 
+                    new com.henrique.catalog.domain.dto.req.rooms.UpdateRoomReqDTO("Sala Atualizada", 12, 16);
+            
+            CinemaEntity cinemaEntity = RoomFactory.createCinemaEntity();
+            RoomEntity updatedRoom = RoomFactory.createRoomEntity(roomId, "Sala Atualizada", cinemaEntity);
+            updatedRoom.setTotalRows(12);
+            updatedRoom.setTotalColumns(16);
+            
+            RoomsResDTO expectedDTO = RoomFactory.createRoomsResponseDTO(roomId, "Sala Atualizada");
+            
+            when(roomsRepository.updatePartial(cinemaId, roomId, "Sala Atualizada", 12, 16))
+                    .thenReturn(1);
+            when(roomsRepository.findByCinemaIdAndId(cinemaId, roomId))
+                    .thenReturn(java.util.Optional.of(updatedRoom));
+            when(roomsMapper.toDTO(updatedRoom))
+                    .thenReturn(expectedDTO);
+
+            // Act
+            RoomsResDTO result = roomsService.updateRoom(cinemaId, roomId, dto);
+
+            // Assert
+            assertNotNull(result);
+            assertEquals(expectedDTO, result);
+            assertEquals("Sala Atualizada", result.name());
+            verify(roomsRepository, times(1)).updatePartial(cinemaId, roomId, "Sala Atualizada", 12, 16);
+            verify(roomsRepository, times(1)).findByCinemaIdAndId(cinemaId, roomId);
+            verify(roomsMapper, times(1)).toDTO(updatedRoom);
+        }
+
+        @Test
+        void shouldThrowNotFoundExceptionWhenRoomDoesNotExist() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            UUID roomId = UUID.randomUUID();
+            com.henrique.catalog.domain.dto.req.rooms.UpdateRoomReqDTO dto = 
+                    new com.henrique.catalog.domain.dto.req.rooms.UpdateRoomReqDTO("Sala Nova", 10, 15);
+
+            when(roomsRepository.updatePartial(cinemaId, roomId, "Sala Nova", 10, 15))
+                    .thenReturn(0);
+
+            // Act & Assert
+            com.henrique.catalog.infra.exceptions.NotFoundException exception = 
+                    assertThrows(com.henrique.catalog.infra.exceptions.NotFoundException.class, () ->
+                    roomsService.updateRoom(cinemaId, roomId, dto));
+            
+            String expectedMessage = String.format("Não existe uma sala com id %s no cinema com id %s", 
+                    roomId, cinemaId);
+            assertEquals(expectedMessage, exception.getMessage());
+            verify(roomsRepository, times(1)).updatePartial(cinemaId, roomId, "Sala Nova", 10, 15);
+            verify(roomsRepository, never()).findByCinemaIdAndId(cinemaId, roomId);
+        }
+
+        @Test
+        void shouldThrowNotFoundExceptionWhenRoomDoesNotExistAfterUpdate() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            UUID roomId = UUID.randomUUID();
+            com.henrique.catalog.domain.dto.req.rooms.UpdateRoomReqDTO dto = 
+                    new com.henrique.catalog.domain.dto.req.rooms.UpdateRoomReqDTO("Sala Modificada", 14, 18);
+
+            when(roomsRepository.updatePartial(cinemaId, roomId, "Sala Modificada", 14, 18))
+                    .thenReturn(1);
+            when(roomsRepository.findByCinemaIdAndId(cinemaId, roomId))
+                    .thenReturn(java.util.Optional.empty());
+
+            // Act & Assert
+            com.henrique.catalog.infra.exceptions.NotFoundException exception = 
+                    assertThrows(com.henrique.catalog.infra.exceptions.NotFoundException.class, () ->
+                    roomsService.updateRoom(cinemaId, roomId, dto));
+            
+            assertEquals(String.format("Não existe uma sala com id %s no cinema com id %s", 
+                    roomId, cinemaId), exception.getMessage());
+            verify(roomsRepository, times(1)).updatePartial(cinemaId, roomId, "Sala Modificada", 14, 18);
+            verify(roomsRepository, times(1)).findByCinemaIdAndId(cinemaId, roomId);
+        }
+
+        @Test
+        void shouldThrowDuplicateResourceExceptionWhenNameAlreadyExists() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            UUID roomId = UUID.randomUUID();
+            com.henrique.catalog.domain.dto.req.rooms.UpdateRoomReqDTO dto = 
+                    new com.henrique.catalog.domain.dto.req.rooms.UpdateRoomReqDTO("Sala Duplicada", 10, 15);
+
+            when(roomsRepository.updatePartial(cinemaId, roomId, "Sala Duplicada", 10, 15))
+                    .thenThrow(new DataIntegrityViolationException("Duplicate"));
+
+            // Act & Assert
+            DuplicateResourceException exception = 
+                    assertThrows(DuplicateResourceException.class, () ->
+                    roomsService.updateRoom(cinemaId, roomId, dto));
+            
+            assertTrue(exception.getMessage().contains("Ja existe uma sala com o nome"));
+            verify(roomsRepository, times(1)).updatePartial(cinemaId, roomId, "Sala Duplicada", 10, 15);
+            verify(roomsRepository, never()).findByCinemaIdAndId(cinemaId, roomId);
+        }
+
+        @Test
+        void shouldUpdateOnlyNameField() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            UUID roomId = UUID.randomUUID();
+            com.henrique.catalog.domain.dto.req.rooms.UpdateRoomReqDTO dto = 
+                    new com.henrique.catalog.domain.dto.req.rooms.UpdateRoomReqDTO("Novo Nome", 15, 20);
+            
+            CinemaEntity cinemaEntity = RoomFactory.createCinemaEntity();
+            RoomEntity updatedRoom = RoomFactory.createRoomEntity(roomId, "Novo Nome", cinemaEntity);
+            updatedRoom.setTotalRows(15);
+            updatedRoom.setTotalColumns(20);
+            
+            RoomsResDTO expectedDTO = RoomFactory.createRoomsResponseDTO(roomId, "Novo Nome");
+            
+            when(roomsRepository.updatePartial(cinemaId, roomId, "Novo Nome", 15, 20))
+                    .thenReturn(1);
+            when(roomsRepository.findByCinemaIdAndId(cinemaId, roomId))
+                    .thenReturn(java.util.Optional.of(updatedRoom));
+            when(roomsMapper.toDTO(updatedRoom))
+                    .thenReturn(expectedDTO);
+
+            // Act
+            RoomsResDTO result = roomsService.updateRoom(cinemaId, roomId, dto);
+
+            // Assert
+            assertEquals("Novo Nome", result.name());
+            verify(roomsRepository, times(1)).updatePartial(cinemaId, roomId, "Novo Nome", 15, 20);
+        }
+
+        @Test
+        void shouldUpdateMultipleFields() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            UUID roomId = UUID.randomUUID();
+            com.henrique.catalog.domain.dto.req.rooms.UpdateRoomReqDTO dto = 
+                    new com.henrique.catalog.domain.dto.req.rooms.UpdateRoomReqDTO("Sala Premium Plus", 20, 25);
+            
+            CinemaEntity cinemaEntity = RoomFactory.createCinemaEntity();
+            RoomEntity updatedRoom = RoomFactory.createRoomEntity(roomId, "Sala Premium Plus", cinemaEntity);
+            updatedRoom.setTotalRows(20);
+            updatedRoom.setTotalColumns(25);
+            
+            RoomsResDTO expectedDTO = RoomFactory.createRoomsResponseDTO(roomId, "Sala Premium Plus");
+            
+            when(roomsRepository.updatePartial(cinemaId, roomId, "Sala Premium Plus", 20, 25))
+                    .thenReturn(1);
+            when(roomsRepository.findByCinemaIdAndId(cinemaId, roomId))
+                    .thenReturn(java.util.Optional.of(updatedRoom));
+            when(roomsMapper.toDTO(updatedRoom))
+                    .thenReturn(expectedDTO);
+
+            // Act
+            RoomsResDTO result = roomsService.updateRoom(cinemaId, roomId, dto);
+
+            // Assert
+            assertNotNull(result);
+            assertEquals("Sala Premium Plus", result.name());
+            verify(roomsRepository, times(1)).updatePartial(cinemaId, roomId, "Sala Premium Plus", 20, 25);
+            verify(roomsRepository, times(1)).findByCinemaIdAndId(cinemaId, roomId);
+        }
+
+        @Test
+        void shouldPassCorrectParametersToRepository() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            UUID roomId = UUID.randomUUID();
+            com.henrique.catalog.domain.dto.req.rooms.UpdateRoomReqDTO dto = 
+                    new com.henrique.catalog.domain.dto.req.rooms.UpdateRoomReqDTO("Sala Teste", 11, 17);
+            
+            CinemaEntity cinemaEntity = RoomFactory.createCinemaEntity();
+            RoomEntity updatedRoom = RoomFactory.createRoomEntity(roomId, "Sala Teste", cinemaEntity);
+            updatedRoom.setTotalRows(11);
+            updatedRoom.setTotalColumns(17);
+            
+            when(roomsRepository.updatePartial(cinemaId, roomId, "Sala Teste", 11, 17))
+                    .thenReturn(1);
+            when(roomsRepository.findByCinemaIdAndId(cinemaId, roomId))
+                    .thenReturn(java.util.Optional.of(updatedRoom));
+            when(roomsMapper.toDTO(updatedRoom))
+                    .thenReturn(RoomFactory.createRoomsResponseDTO(roomId, "Sala Teste"));
+
+            // Act
+            roomsService.updateRoom(cinemaId, roomId, dto);
+
+            // Assert
+            verify(roomsRepository, times(1)).updatePartial(
+                    eq(cinemaId), 
+                    eq(roomId), 
+                    eq("Sala Teste"), 
+                    eq(11), 
+                    eq(17)
+            );
         }
     }
 }

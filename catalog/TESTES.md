@@ -248,7 +248,16 @@ Arquivo: [src/test/java/com/henrique/catalog/service/RoomsServiceTest.java](src/
 - Define `cinema` e `createdByUserId` corretamente.
 - Chama o mapper para criar a entidade.
 - Lança `DuplicateResourceException` em violação de unicidade.
-- Mensagem de erro contém o campo duplicado.
+- Mensagem de erro contém o campo duplicado: "Ja existe uma sala com o nome".
+
+### `updateRoom(UUID, UUID, UpdateRoomReqDTO)`
+- Atualiza sala com sucesso e retorna `RoomsResDTO`.
+- Lança `NotFoundException` quando nenhum registro é atualizado (affectedRows < 1).
+- Lança `NotFoundException` quando a sala não é encontrada após a atualização.
+- Lança `DuplicateResourceException` quando o nome já existe no cinema.
+- Mensagem de erro de duplicação contém: "Ja existe uma sala com o nome".
+- Passa parâmetros corretos ao repositório (cinemaId, roomId, name, totalRows, totalColumns).
+- Retorna dados atualizados corretamente.
 
 ---
 
