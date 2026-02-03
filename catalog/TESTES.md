@@ -11,6 +11,8 @@ Test files:
 - [src/test/java/com/henrique/catalog/service/CinemaServiceTest.java](src/test/java/com/henrique/catalog/service/CinemaServiceTest.java)
 - [src/test/java/com/henrique/catalog/controller/CinemaControllerTest.java](src/test/java/com/henrique/catalog/controller/CinemaControllerTest.java)
 - [src/test/java/com/henrique/catalog/domain/mapper/CinemaMapperTest.java](src/test/java/com/henrique/catalog/domain/mapper/CinemaMapperTest.java)
+- [src/test/java/com/henrique/catalog/service/RoomsServiceTest.java](src/test/java/com/henrique/catalog/service/RoomsServiceTest.java)
+- [src/test/java/com/henrique/catalog/controller/RoomsControllerTest.java](src/test/java/com/henrique/catalog/controller/RoomsControllerTest.java)
 
 ---
 
@@ -216,3 +218,34 @@ Arquivo: [src/test/java/com/henrique/catalog/domain/mapper/CinemaMapperTest.java
 - Mapeia corretamente diferentes DTOs de cinema.
 - Mantém integridade dos dados (`name`, `city`).
 - Ignora campos gerados/gerenciados (`id`, `createdByUserId`, `active`, `createdAt`).
+
+---
+
+## RoomsServiceTest
+Arquivo: [src/test/java/com/henrique/catalog/service/RoomsServiceTest.java](src/test/java/com/henrique/catalog/service/RoomsServiceTest.java)
+
+### `getAllRooms(Pageable, UUID)`
+- Retorna página com itens quando existem salas.
+- Retorna página vazia quando não há salas para o cinema.
+- Respeita parâmetros do `Pageable` (tamanho e número da página).
+- Mapeia todas as entidades para DTOs corretamente.
+- Mapeia dados do cinema para cada sala.
+- Chama `findByCinemaId` com os parâmetros corretos.
+- Retorna uma única sala quando apenas uma existe.
+- Chama o mapper do cinema para cada sala retornada.
+
+---
+
+## RoomsControllerTest
+Arquivo: [src/test/java/com/henrique/catalog/controller/RoomsControllerTest.java](src/test/java/com/henrique/catalog/controller/RoomsControllerTest.java)
+
+### `getAllRoomsFromCinemaId(UUID, PaginationParams)`
+- Retorna **200 OK** quando há salas.
+- Retorna **204 NO_CONTENT** quando a lista de salas está vazia.
+- Envia parâmetros corretos de paginação ao serviço.
+- Envia `cinemaId` correto ao serviço.
+- Retorna múltiplas salas com tamanho correto.
+- Retorna `SuccessListDataResponse` com estrutura correta (content, page, pageSize, totalElements).
+- Suporta diferentes tamanhos de página.
+- Retorna salas com informações detalhadas (`id`, `name`, `totalRows`, `totalColumns`, cinema).
+- Chama o serviço uma única vez por requisição.
