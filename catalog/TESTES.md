@@ -243,6 +243,13 @@ Arquivo: [src/test/java/com/henrique/catalog/service/RoomsServiceTest.java](src/
 - Mapeia `RoomEntity` para DTO corretamente.
 - Lança exceção com formato de mensagem correto.
 
+### `createRoomForCinemaId(UUID, CreateRoomReqDTO, UUID)`
+- Cria sala com sucesso e retorna `UUID`.
+- Define `cinema` e `createdByUserId` corretamente.
+- Chama o mapper para criar a entidade.
+- Lança `DuplicateResourceException` em violação de unicidade.
+- Mensagem de erro contém o campo duplicado.
+
 ---
 
 ## RoomsControllerTest
@@ -266,6 +273,12 @@ Arquivo: [src/test/java/com/henrique/catalog/controller/RoomsControllerTest.java
 - Retorna `SuccessResponse` com estrutura correta (data, timestamp).
 - Chama o serviço apenas uma vez.
 
+### `createRoomForCinemaId(UUID, CreateRoomReqDTO, String)`
+- Retorna **201 CREATED**.
+- Envia `cinemaId`, `dto` e `userId` corretos ao serviço.
+- Retorna `Location` com o `id` criado.
+- Suporta criação com dados diferentes.
+
 ---
 
 ## RoomsMapperTest
@@ -280,3 +293,9 @@ Arquivo: [src/test/java/com/henrique/catalog/domain/mapper/RoomsMapperTest.java]
 - Mapeia diferentes nomes de sala.
 - Mapeia capacidade da sala corretamente (`totalRows`, `totalColumns`).
 - Preserva integridade de todos os dados mapeados.
+
+### `toEntity(CreateRoomReqDTO)`
+- Mapeia todos os campos do DTO para a entidade (`name`, `totalRows`, `totalColumns`).
+- Retorna `null` quando o DTO é `null`.
+- Não mapeia `id` ao criar entidade.
+- Não mapeia `createdByUserId` ao criar entidade.

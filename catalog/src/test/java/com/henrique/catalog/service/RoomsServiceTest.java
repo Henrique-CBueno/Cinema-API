@@ -1,11 +1,13 @@
 package com.henrique.catalog.service;
 
+import com.henrique.catalog.domain.dto.req.rooms.CreateRoomReqDTO;
 import com.henrique.catalog.domain.dto.res.rooms.RoomsResDTO;
 import com.henrique.catalog.domain.entity.CinemaEntity;
 import com.henrique.catalog.domain.entity.RoomEntity;
 import com.henrique.catalog.domain.mapper.CinemaMapper;
 import com.henrique.catalog.domain.mapper.RoomsMapper;
 import com.henrique.catalog.factory.RoomFactory;
+import com.henrique.catalog.infra.exceptions.DuplicateResourceException;
 import com.henrique.catalog.repository.RoomsRepository;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -13,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -36,6 +39,9 @@ class RoomsServiceTest {
 
     @Mock
     private RoomsMapper roomsMapper;
+
+        @Mock
+        private CinemaService cinemaService;
 
     @InjectMocks
     private RoomsService roomsService;
@@ -276,6 +282,107 @@ class RoomsServiceTest {
             String expectedMessage = String.format("Não existe uma sala com id %s no cinema com id %s", 
                     roomId, cinemaId);
             assertEquals(expectedMessage, exception.getMessage());
+        }
+    }
+
+    @Nested
+    class CreateRoomForCinemaId {
+
+        @Test
+        void shouldCreateRoomSuccessfully() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+            CreateRoomReqDTO dto = new CreateRoomReqDTO("Sala 1", 10, 15);
+            CinemaEntity cinemaEntity = RoomFactory.createCinemaEntity();
+            RoomEntity mappedEntity = new RoomEntity();
+            UUID createdId = UUID.randomUUID();
+            RoomEntity savedEntity = new RoomEntity();
+            savedEntity.setId(createdId);
+
+            when(roomsMapper.toEntity(dto))
+                    .thenReturn(mappedEntity);
+            when(cinemaService.getCinemaByIdReturningEntity(cinemaId))
+                    .thenReturn(cinemaEntity);
+            when(roomsRepository.saveAndFlush(any(RoomEntity.class)))
+                    .thenReturn(savedEntity);
+
+            // Act
+            UUID result = roomsService.createRoomForCinemaId(cinemaId, dto, userId);
+
+            // Assert
+            assertNotNull(result);
+            assertEquals(createdId, result);
+            verify(roomsMapper, times(1)).toEntity(dto);
+            verify(cinemaService, times(1)).getCinemaByIdReturningEntity(cinemaId);
+            verify(roomsRepository, times(1)).saveAndFlush(any(RoomEntity.class));
+        }
+
+        @Test
+        void shouldSetCinemaAndCreatedByUserIdWhenCreatingRoom() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+            CreateRoomReqDTO dto = new CreateRoomReqDTO("Sala Premium", 20, 25);
+            CinemaEntity cinemaEntity = RoomFactory.createCinemaEntity();
+            RoomEntity mappedEntity = new RoomEntity();
+
+            when(roomsMapper.toEntity(dto))
+                    .thenReturn(mappedEntity);
+            when(cinemaService.getCinemaByIdReturningEntity(cinemaId))
+                    .thenReturn(cinemaEntity);
+            when(roomsRepository.saveAndFlush(any(RoomEntity.class)))
+                    .thenReturn(RoomFactory.createRoomEntity(UUID.randomUUID(), "Sala Premium"));
+
+            // Act
+            roomsService.createRoomForCinemaId(cinemaId, dto, userId);
+
+            // Assert
+            verify(roomsRepository, times(1)).saveAndFlush(argThat(room ->
+                    room.getCinema().equals(cinemaEntity) && room.getCreatedByUserId().equals(userId)
+            ));
+        }
+
+        @Test
+        void shouldThrowDuplicateResourceExceptionWhenRoomNameAlreadyExists() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+            CreateRoomReqDTO dto = new CreateRoomReqDTO("Sala VIP", 12, 18);
+            RoomEntity mappedEntity = new RoomEntity();
+
+            when(roomsMapper.toEntity(dto))
+                    .thenReturn(mappedEntity);
+            when(cinemaService.getCinemaByIdReturningEntity(cinemaId))
+                    .thenReturn(RoomFactory.createCinemaEntity());
+            when(roomsRepository.saveAndFlush(any(RoomEntity.class)))
+                    .thenThrow(new DataIntegrityViolationException("Duplicate"));
+
+            // Act & Assert
+            assertThrows(DuplicateResourceException.class, () ->
+                    roomsService.createRoomForCinemaId(cinemaId, dto, userId));
+            verify(roomsRepository, times(1)).saveAndFlush(any(RoomEntity.class));
+        }
+
+        @Test
+        void shouldThrowDuplicateResourceExceptionWithCorrectFieldName() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+            CreateRoomReqDTO dto = new CreateRoomReqDTO("Sala IMAX", 18, 22);
+            RoomEntity mappedEntity = new RoomEntity();
+
+            when(roomsMapper.toEntity(dto))
+                    .thenReturn(mappedEntity);
+            when(cinemaService.getCinemaByIdReturningEntity(cinemaId))
+                    .thenReturn(RoomFactory.createCinemaEntity());
+            when(roomsRepository.saveAndFlush(any(RoomEntity.class)))
+                    .thenThrow(new DataIntegrityViolationException("Duplicate"));
+
+            // Act & Assert
+            DuplicateResourceException exception = assertThrows(DuplicateResourceException.class, () ->
+                    roomsService.createRoomForCinemaId(cinemaId, dto, userId));
+            assertTrue(exception.getMessage().contains("name e city iguais"));
         }
     }
 }

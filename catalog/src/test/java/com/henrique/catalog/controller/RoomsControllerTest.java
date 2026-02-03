@@ -1,6 +1,7 @@
 package com.henrique.catalog.controller;
 
 import com.henrique.catalog.domain.dto.global.PaginationParams;
+import com.henrique.catalog.domain.dto.req.rooms.CreateRoomReqDTO;
 import com.henrique.catalog.domain.dto.res.rooms.RoomsResDTO;
 import com.henrique.catalog.factory.RoomFactory;
 import com.henrique.catalog.factory.RoomResponseFactory;
@@ -11,16 +12,19 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -312,4 +316,128 @@ class RoomsControllerTest {
             // ASSERT
             verify(roomsService, times(1)).getRoomByCinemaIdAndRoomId(any(), any());
         }
-    }}
+        }
+
+        @Nested
+        class CreateRoomForCinemaId {
+
+                @Test
+                void shouldReturnHttpCREATED() {
+                        // Arrange
+                        UUID cinemaId = UUID.randomUUID();
+                        MockHttpServletRequest request = new MockHttpServletRequest();
+                        request.setRequestURI("/cinemas/" + cinemaId + "/rooms");
+                        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+                        CreateRoomReqDTO dto = new CreateRoomReqDTO("Sala 1", 10, 15);
+                        UUID createdId = UUID.randomUUID();
+
+                        doReturn(createdId)
+                                        .when(roomsService)
+                                        .createRoomForCinemaId(any(), any(), any());
+
+                        // Act
+                        ResponseEntity<Void> response = roomsController.createRoomForCinemaId(
+                                        cinemaId,
+                                        dto,
+                                        UUID.randomUUID().toString()
+                        );
+
+                        // Assert
+                        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+                        assertNotNull(response.getHeaders().getLocation());
+
+                        // Cleanup
+                        RequestContextHolder.resetRequestAttributes();
+                }
+
+                @Test
+                void shouldPassCorrectParametersToService() {
+                        // Arrange
+                        UUID cinemaId = UUID.randomUUID();
+                        String userId = UUID.randomUUID().toString();
+                        CreateRoomReqDTO dto = new CreateRoomReqDTO("Sala VIP", 12, 18);
+                        UUID createdId = UUID.randomUUID();
+
+                        doReturn(createdId)
+                                        .when(roomsService)
+                                        .createRoomForCinemaId(any(), any(), any());
+
+                        MockHttpServletRequest request = new MockHttpServletRequest();
+                        request.setRequestURI("/cinemas/" + cinemaId + "/rooms");
+                        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+                        // Act
+                        roomsController.createRoomForCinemaId(cinemaId, dto, userId);
+
+                        // Assert
+                        verify(roomsService, times(1)).createRoomForCinemaId(
+                                        eq(cinemaId),
+                                        eq(dto),
+                                        eq(UUID.fromString(userId))
+                        );
+
+                        // Cleanup
+                        RequestContextHolder.resetRequestAttributes();
+                }
+
+                @Test
+                void shouldReturnCorrectLocationHeader() {
+                        // Arrange
+                        UUID cinemaId = UUID.randomUUID();
+                        MockHttpServletRequest request = new MockHttpServletRequest();
+                        request.setRequestURI("/cinemas/" + cinemaId + "/rooms");
+                        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+                        CreateRoomReqDTO dto = new CreateRoomReqDTO("Sala IMAX", 20, 30);
+                        UUID createdId = UUID.randomUUID();
+
+                        doReturn(createdId)
+                                        .when(roomsService)
+                                        .createRoomForCinemaId(any(), any(), any());
+
+                        // Act
+                        ResponseEntity<Void> response = roomsController.createRoomForCinemaId(
+                                        cinemaId,
+                                        dto,
+                                        UUID.randomUUID().toString()
+                        );
+
+                        // Assert
+                        assertNotNull(response.getHeaders().getLocation());
+                        assertTrue(response.getHeaders().getLocation().toString().contains(createdId.toString()));
+
+                        // Cleanup
+                        RequestContextHolder.resetRequestAttributes();
+                }
+
+                @Test
+                void shouldCreateRoomWithDifferentData() {
+                        // Arrange
+                        UUID cinemaId = UUID.randomUUID();
+                        String userId = UUID.randomUUID().toString();
+                        CreateRoomReqDTO dto = new CreateRoomReqDTO("Sala Premium", 25, 35);
+                        UUID createdId = UUID.randomUUID();
+                        ArgumentCaptor<CreateRoomReqDTO> dtoCaptor = ArgumentCaptor.forClass(CreateRoomReqDTO.class);
+
+                        doReturn(createdId)
+                                        .when(roomsService)
+                                        .createRoomForCinemaId(eq(cinemaId), dtoCaptor.capture(), eq(UUID.fromString(userId)));
+
+                        MockHttpServletRequest request = new MockHttpServletRequest();
+                        request.setRequestURI("/cinemas/" + cinemaId + "/rooms");
+                        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+                        // Act
+                        roomsController.createRoomForCinemaId(cinemaId, dto, userId);
+
+                        // Assert
+                        assertEquals("Sala Premium", dtoCaptor.getValue().name());
+                        assertEquals(25, dtoCaptor.getValue().totalRows());
+                        assertEquals(35, dtoCaptor.getValue().totalColumns());
+
+                        // Cleanup
+                        RequestContextHolder.resetRequestAttributes();
+                }
+        }
+}

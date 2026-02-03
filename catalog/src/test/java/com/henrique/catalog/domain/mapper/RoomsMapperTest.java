@@ -1,5 +1,6 @@
 package com.henrique.catalog.domain.mapper;
 
+import com.henrique.catalog.domain.dto.req.rooms.CreateRoomReqDTO;
 import com.henrique.catalog.domain.dto.res.cinema.CinemaResDTO;
 import com.henrique.catalog.domain.dto.res.rooms.RoomsResDTO;
 import com.henrique.catalog.domain.entity.CinemaEntity;
@@ -251,4 +252,73 @@ class RoomsMapperTest {
             assertEquals(totalColumns, response.totalColumns());
         }
     }
+
+        @Nested
+        class ToEntity {
+
+                @Test
+                void shouldMapCreateDTOToEntity() {
+                        // Arrange
+                        CreateRoomReqDTO dto = new CreateRoomReqDTO("Sala 1", 10, 15);
+
+                        // Act
+                        RoomEntity entity = roomsMapper.toEntity(dto);
+
+                        // Assert
+                        assertNotNull(entity);
+                        assertEquals(dto.name(), entity.getName());
+                        assertEquals(dto.totalRows(), entity.getTotalRows());
+                        assertEquals(dto.totalColumns(), entity.getTotalColumns());
+                }
+
+                @Test
+                void shouldReturnNullWhenDTOIsNull() {
+                        // Arrange
+                        CreateRoomReqDTO dto = null;
+
+                        // Act
+                        RoomEntity entity = roomsMapper.toEntity(dto);
+
+                        // Assert
+                        assertNull(entity);
+                }
+
+                @Test
+                void shouldMapAllFieldsFromDTOCorrectly() {
+                        // Arrange
+                        CreateRoomReqDTO dto = new CreateRoomReqDTO("Sala Premium", 22, 28);
+
+                        // Act
+                        RoomEntity entity = roomsMapper.toEntity(dto);
+
+                        // Assert
+                        assertEquals("Sala Premium", entity.getName());
+                        assertEquals(22, entity.getTotalRows());
+                        assertEquals(28, entity.getTotalColumns());
+                }
+
+                @Test
+                void shouldNotMapIdWhenCreatingFromDTO() {
+                        // Arrange
+                        CreateRoomReqDTO dto = new CreateRoomReqDTO("Sala IMAX", 18, 20);
+
+                        // Act
+                        RoomEntity entity = roomsMapper.toEntity(dto);
+
+                        // Assert
+                        assertNull(entity.getId());
+                }
+
+                @Test
+                void shouldNotMapCreatedByUserIdWhenCreatingFromDTO() {
+                        // Arrange
+                        CreateRoomReqDTO dto = new CreateRoomReqDTO("Sala VIP", 12, 14);
+
+                        // Act
+                        RoomEntity entity = roomsMapper.toEntity(dto);
+
+                        // Assert
+                        assertNull(entity.getCreatedByUserId());
+                }
+        }
 }
