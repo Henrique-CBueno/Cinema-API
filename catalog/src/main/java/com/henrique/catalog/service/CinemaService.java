@@ -52,7 +52,8 @@ public class CinemaService {
 
             return newCinema.getId();
         } catch (DataIntegrityViolationException e) {
-            throw new DuplicateResourceException(ExceptionsConstants.DUPLICATE_RESOURCE, "name e city iguais");
+            throw new DuplicateResourceException(ExceptionsConstants.DUPLICATE_RESOURCE_ROOM,
+                    dto.name());
         }
     }
 
@@ -92,5 +93,16 @@ public class CinemaService {
                 ExceptionsConstants.CINEMA_DONT_EXISTS,
                 id
         ));
+    }
+
+
+    public CinemaEntity getCinemaByIdReturningEntity(UUID id) {
+        return cinemaRepository.findById(id)
+                .orElseThrow(() ->
+                        new NotFoundException(String.format(
+                                ExceptionsConstants.CINEMA_DONT_EXISTS,
+                                id
+                        )
+                        ));
     }
 }
