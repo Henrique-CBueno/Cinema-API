@@ -1,7 +1,9 @@
 package com.henrique.catalog.controller;
 
 import com.henrique.catalog.domain.dto.global.PaginationParams;
+import com.henrique.catalog.domain.dto.req.cinema.UpdateCinemaReqDTO;
 import com.henrique.catalog.domain.dto.req.rooms.CreateRoomReqDTO;
+import com.henrique.catalog.domain.dto.req.rooms.UpdateRoomReqDTO;
 import com.henrique.catalog.domain.dto.res.rooms.RoomsResDTO;
 import com.henrique.catalog.infra.padronize.SuccessListDataResponse;
 import com.henrique.catalog.infra.padronize.SuccessResponse;
@@ -63,5 +65,17 @@ public class RoomsController {
                 .toUri();
 
         return ResponseEntity.created(uri).build();
+    }
+
+    @PatchMapping("{roomId}")
+    public ResponseEntity<SuccessResponse> partialUpdateRoom(@PathVariable UUID cinemaId,
+                                                             @PathVariable UUID roomId,
+                                                             @RequestBody UpdateRoomReqDTO dto) {
+
+        RoomsResDTO updatedRoom = roomsService.updateRoom(cinemaId,
+                roomId,
+                dto);
+
+        return ResponseEntity.ok(new SuccessResponse(updatedRoom));
     }
 }
