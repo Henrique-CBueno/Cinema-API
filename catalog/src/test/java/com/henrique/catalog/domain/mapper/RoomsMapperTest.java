@@ -119,10 +119,10 @@ class RoomsMapperTest {
 
             // Assert
             assertNotNull(response);
-            assertNotNull(response.cinemaResDTO());
-            assertEquals(cinemaEntity.getId(), response.cinemaResDTO().id());
-            assertEquals(cinemaEntity.getName(), response.cinemaResDTO().name());
-            assertEquals(cinemaEntity.getCity(), response.cinemaResDTO().city());
+            assertNotNull(response.cinema());
+            assertEquals(cinemaEntity.getId(), response.cinema().id());
+            assertEquals(cinemaEntity.getName(), response.cinema().name());
+            assertEquals(cinemaEntity.getCity(), response.cinema().city());
         }
 
         @Test
@@ -155,7 +155,7 @@ class RoomsMapperTest {
             assertEquals("Sala 3D", response.name());
             assertEquals(20, response.totalRows());
             assertEquals(25, response.totalColumns());
-            assertNotNull(response.cinemaResDTO());
+            assertNotNull(response.cinema());
         }
 
         @Test
