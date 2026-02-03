@@ -3,6 +3,7 @@ package com.henrique.catalog.controller;
 import com.henrique.catalog.domain.dto.global.PaginationParams;
 import com.henrique.catalog.domain.dto.res.rooms.RoomsResDTO;
 import com.henrique.catalog.infra.padronize.SuccessListDataResponse;
+import com.henrique.catalog.infra.padronize.SuccessResponse;
 import com.henrique.catalog.service.RoomsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -34,5 +35,13 @@ public class RoomsController {
                 allRooms.getNumber(),
                 allRooms.getSize(),
                 allRooms.getTotalElements()));
+    }
+
+    @GetMapping("{roomId}")
+    public ResponseEntity<SuccessResponse> getRoomFromCinemaByRoomId(@PathVariable UUID cinemaId,
+                                                                     @PathVariable UUID roomId) {
+
+        RoomsResDTO returnedRoom = roomsService.getRoomByCinemaIdAndRoomId(cinemaId, roomId);
+        return ResponseEntity.ok(new SuccessResponse(returnedRoom));
     }
 }
