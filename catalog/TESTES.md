@@ -146,6 +146,13 @@ Arquivo: [src/test/java/com/henrique/catalog/service/CinemaServiceTest.java](src
 - Mapeia DTO para entidade corretamente.
 - Retorna o `UUID` do cinema criado.
 
+### `partialUpdate(UUID, UpdateCinemaReqDTO)`
+- Atualiza cinema com sucesso e retorna `CinemaResDTO`.
+- Lança `NotFoundException` quando cinema não existe para atualização.
+- Lança `DuplicateResourceException` quando nome e cidade já existem.
+- Atualiza cinema com dados parciais.
+- Lança `NotFoundException` se cinema não for encontrado após atualização.
+
 ---
 
 ## CinemaControllerTest
@@ -172,6 +179,13 @@ Arquivo: [src/test/java/com/henrique/catalog/controller/CinemaControllerTest.jav
 - Envia `dto` e `userId` corretos ao serviço.
 - Retorna `Location` com o `id` criado.
 - Suporta criação com dados diferentes.
+
+### `partialUpdateCinema(UUID, UpdateCinemaReqDTO)`
+- Retorna **200 OK**.
+- Retorna `SuccessResponse` com cinema atualizado.
+- Envia `id` correto ao serviço.
+- Envia `UpdateCinemaReqDTO` correto ao serviço.
+- Atualiza cinema com valores diferentes.
 
 ---
 

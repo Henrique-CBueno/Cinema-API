@@ -1,5 +1,6 @@
 package com.henrique.catalog.service;
 
+import com.henrique.catalog.domain.dto.req.cinema.UpdateCinemaReqDTO;
 import com.henrique.catalog.domain.dto.res.cinema.CinemaResDTO;
 import com.henrique.catalog.domain.entity.CinemaEntity;
 import com.henrique.catalog.domain.mapper.CinemaMapper;
@@ -371,6 +372,108 @@ class CinemaServiceTest {
 
             // Assert
             assertEquals(cinemaId, result);
+        }
+    }
+
+    @Nested
+    class PartialUpdate {
+
+        @Test
+        void shouldUpdateCinemaSuccessfully() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            var updateDTO = CinemaFactory.createUpdateCinemaRequestDTO("Cinépolis", "Rio de Janeiro");
+            var updatedEntity = CinemaFactory.createCinemaEntity(cinemaId, "Cinépolis", "Rio de Janeiro");
+            var expectedResponse = CinemaFactory.createCinemaResponseDTO(cinemaId, "Cinépolis", "Rio de Janeiro");
+
+            when(cinemaRepository.updatePartial(cinemaId, updateDTO.name(), updateDTO.city()))
+                    .thenReturn(1);
+            when(cinemaRepository.findById(cinemaId))
+                    .thenReturn(Optional.of(updatedEntity));
+            when(cinemaMapper.toDTO(updatedEntity))
+                    .thenReturn(expectedResponse);
+
+            // Act
+            CinemaResDTO result = cinemaService.partialUpdate(cinemaId, updateDTO);
+
+            // Assert
+            assertNotNull(result);
+            assertEquals(expectedResponse.id(), result.id());
+            assertEquals(expectedResponse.name(), result.name());
+            assertEquals(expectedResponse.city(), result.city());
+            verify(cinemaRepository, times(1)).updatePartial(cinemaId, updateDTO.name(), updateDTO.city());
+        }
+
+        @Test
+        void shouldThrowNotFoundExceptionWhenCinemaDoesNotExistForUpdate() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            var updateDTO = CinemaFactory.createUpdateCinemaRequestDTO();
+
+            when(cinemaRepository.updatePartial(cinemaId, updateDTO.name(), updateDTO.city()))
+                    .thenReturn(0);
+
+            // Act & Assert
+            assertThrows(NotFoundException.class,
+                    () -> cinemaService.partialUpdate(cinemaId, updateDTO));
+            verify(cinemaRepository, times(1)).updatePartial(cinemaId, updateDTO.name(), updateDTO.city());
+            verify(cinemaRepository, never()).findById(any());
+        }
+
+        @Test
+        void shouldThrowDuplicateResourceExceptionOnUpdateWhenNameAndCityAlreadyExist() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            var updateDTO = CinemaFactory.createUpdateCinemaRequestDTO("Cinemark", "São Paulo");
+
+            when(cinemaRepository.updatePartial(cinemaId, updateDTO.name(), updateDTO.city()))
+                    .thenThrow(new DataIntegrityViolationException("Duplicate entry"));
+
+            // Act & Assert
+            assertThrows(DuplicateResourceException.class,
+                    () -> cinemaService.partialUpdate(cinemaId, updateDTO));
+            verify(cinemaRepository, times(1)).updatePartial(cinemaId, updateDTO.name(), updateDTO.city());
+        }
+
+        @Test
+        void shouldUpdateCinemaWithPartialData() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            var updateDTO = CinemaFactory.createUpdateCinemaRequestDTO("UCI", "Brasília");
+            var updatedEntity = CinemaFactory.createCinemaEntity(cinemaId, "UCI", "Brasília");
+            var expectedResponse = CinemaFactory.createCinemaResponseDTO(cinemaId, "UCI", "Brasília");
+
+            when(cinemaRepository.updatePartial(cinemaId, updateDTO.name(), updateDTO.city()))
+                    .thenReturn(1);
+            when(cinemaRepository.findById(cinemaId))
+                    .thenReturn(Optional.of(updatedEntity));
+            when(cinemaMapper.toDTO(updatedEntity))
+                    .thenReturn(expectedResponse);
+
+            // Act
+            CinemaResDTO result = cinemaService.partialUpdate(cinemaId, updateDTO);
+
+            // Assert
+            assertEquals("UCI", result.name());
+            assertEquals("Brasília", result.city());
+        }
+
+        @Test
+        void shouldThrowNotFoundExceptionIfCinemaIsNotFoundAfterUpdate() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            var updateDTO = CinemaFactory.createUpdateCinemaRequestDTO();
+
+            when(cinemaRepository.updatePartial(cinemaId, updateDTO.name(), updateDTO.city()))
+                    .thenReturn(1);
+            when(cinemaRepository.findById(cinemaId))
+                    .thenReturn(Optional.empty());
+
+            // Act & Assert
+            assertThrows(NotFoundException.class,
+                    () -> cinemaService.partialUpdate(cinemaId, updateDTO));
+            verify(cinemaRepository, times(1)).updatePartial(cinemaId, updateDTO.name(), updateDTO.city());
+            verify(cinemaRepository, times(1)).findById(cinemaId);
         }
     }
 }

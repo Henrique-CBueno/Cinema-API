@@ -2,6 +2,7 @@ package com.henrique.catalog.controller;
 
 import com.henrique.catalog.domain.dto.global.PaginationParams;
 import com.henrique.catalog.domain.dto.req.cinema.CreateCinemaReqDTO;
+import com.henrique.catalog.domain.dto.req.cinema.UpdateCinemaReqDTO;
 import com.henrique.catalog.domain.dto.res.cinema.CinemaResDTO;
 import com.henrique.catalog.factory.CinemaFactory;
 import com.henrique.catalog.infra.padronize.SuccessListDataResponse;
@@ -51,6 +52,9 @@ class CinemaControllerTest {
 
     @Captor
     ArgumentCaptor<UUID> userIdCaptor;
+
+    @Captor
+    ArgumentCaptor<UpdateCinemaReqDTO> updateCinemaCaptor;
 
     @Nested
     class GetAllCinemas {
@@ -382,6 +386,99 @@ class CinemaControllerTest {
 
             // Cleanup
             RequestContextHolder.resetRequestAttributes();
+        }
+    }
+
+    @Nested
+    class PartialUpdateCinema {
+
+        @Test
+        void shouldPartialUpdateCinemaWithHttpOK() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            var updateDTO = CinemaFactory.createUpdateCinemaRequestDTO("Cinépolis", "Curitiba");
+            var responseDTO = CinemaFactory.createCinemaResponseDTO(cinemaId, "Cinépolis", "Curitiba");
+
+            when(cinemaService.partialUpdate(cinemaId, updateDTO))
+                    .thenReturn(responseDTO);
+
+            // Act
+            ResponseEntity<SuccessResponse> response = cinemaController.partialUpdateCinema(cinemaId, updateDTO);
+
+            // Assert
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+        }
+
+        @Test
+        void shouldReturnSuccessResponseWithUpdatedCinema() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            var updateDTO = CinemaFactory.createUpdateCinemaRequestDTO("UCI", "Brasília");
+            var responseDTO = CinemaFactory.createCinemaResponseDTO(cinemaId, "UCI", "Brasília");
+
+            when(cinemaService.partialUpdate(cinemaId, updateDTO))
+                    .thenReturn(responseDTO);
+
+            // Act
+            ResponseEntity<SuccessResponse> response = cinemaController.partialUpdateCinema(cinemaId, updateDTO);
+
+            // Assert
+            assertNotNull(response.getBody());
+            assertThat(response.getBody().data()).isEqualTo(responseDTO);
+        }
+
+        @Test
+        void shouldPassCorrectCinemaIdToService() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            var updateDTO = CinemaFactory.createUpdateCinemaRequestDTO();
+            var responseDTO = CinemaFactory.createCinemaResponseDTO(cinemaId, updateDTO.name(), updateDTO.city());
+
+            when(cinemaService.partialUpdate(uuidCapture.capture(), any()))
+                    .thenReturn(responseDTO);
+
+            // Act
+            cinemaController.partialUpdateCinema(cinemaId, updateDTO);
+
+            // Assert
+            assertEquals(cinemaId, uuidCapture.getValue());
+        }
+
+        @Test
+        void shouldPassCorrectUpdateDTOToService() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            var updateDTO = CinemaFactory.createUpdateCinemaRequestDTO("Kinoplex", "Salvador");
+            var responseDTO = CinemaFactory.createCinemaResponseDTO(cinemaId, "Kinoplex", "Salvador");
+
+            when(cinemaService.partialUpdate(any(), updateCinemaCaptor.capture()))
+                    .thenReturn(responseDTO);
+
+            // Act
+            cinemaController.partialUpdateCinema(cinemaId, updateDTO);
+
+            // Assert
+            assertEquals("Kinoplex", updateCinemaCaptor.getValue().name());
+            assertEquals("Salvador", updateCinemaCaptor.getValue().city());
+        }
+
+        @Test
+        void shouldUpdateCinemaWithDifferentValues() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            var updateDTO = CinemaFactory.createUpdateCinemaRequestDTO("Cineflix", "Fortaleza");
+            var responseDTO = CinemaFactory.createCinemaResponseDTO(cinemaId, "Cineflix", "Fortaleza");
+
+            when(cinemaService.partialUpdate(cinemaId, updateDTO))
+                    .thenReturn(responseDTO);
+
+            // Act
+            ResponseEntity<SuccessResponse> response = cinemaController.partialUpdateCinema(cinemaId, updateDTO);
+
+            // Assert
+            CinemaResDTO resultData = (CinemaResDTO) response.getBody().data();
+            assertEquals("Cineflix", resultData.name());
+            assertEquals("Fortaleza", resultData.city());
         }
     }
 
