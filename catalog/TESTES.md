@@ -13,6 +13,7 @@ Test files:
 - [src/test/java/com/henrique/catalog/domain/mapper/CinemaMapperTest.java](src/test/java/com/henrique/catalog/domain/mapper/CinemaMapperTest.java)
 - [src/test/java/com/henrique/catalog/service/RoomsServiceTest.java](src/test/java/com/henrique/catalog/service/RoomsServiceTest.java)
 - [src/test/java/com/henrique/catalog/controller/RoomsControllerTest.java](src/test/java/com/henrique/catalog/controller/RoomsControllerTest.java)
+- [src/test/java/com/henrique/catalog/domain/mapper/RoomsMapperTest.java](src/test/java/com/henrique/catalog/domain/mapper/RoomsMapperTest.java)
 
 ---
 
@@ -234,6 +235,14 @@ Arquivo: [src/test/java/com/henrique/catalog/service/RoomsServiceTest.java](src/
 - Retorna uma única sala quando apenas uma existe.
 - Chama o mapper do cinema para cada sala retornada.
 
+### `getRoomByCinemaIdAndRoomId(UUID, UUID)`
+- Retorna `RoomsResDTO` quando a sala existe no cinema.
+- Lança `NotFoundException` quando a sala não existe.
+- Mensagem de erro contém o `roomId` e `cinemaId` solicitados.
+- Chama repository com os parâmetros corretos.
+- Mapeia `RoomEntity` para DTO corretamente.
+- Lança exceção com formato de mensagem correto.
+
 ---
 
 ## RoomsControllerTest
@@ -249,3 +258,25 @@ Arquivo: [src/test/java/com/henrique/catalog/controller/RoomsControllerTest.java
 - Suporta diferentes tamanhos de página.
 - Retorna salas com informações detalhadas (`id`, `name`, `totalRows`, `totalColumns`, cinema).
 - Chama o serviço uma única vez por requisição.
+
+### `getRoomFromCinemaByRoomId(UUID, UUID)`
+- Retorna **200 OK** quando a sala existe.
+- Passa `cinemaId` e `roomId` corretos ao serviço.
+- Retorna dados corretos da sala (`id`, `name`).
+- Retorna `SuccessResponse` com estrutura correta (data, timestamp).
+- Chama o serviço apenas uma vez.
+
+---
+
+## RoomsMapperTest
+Arquivo: [src/test/java/com/henrique/catalog/domain/mapper/RoomsMapperTest.java](src/test/java/com/henrique/catalog/domain/mapper/RoomsMapperTest.java)
+
+### `toDTO(RoomEntity)`
+- Mapeia todos os campos da entidade para o DTO (`id`, `name`, `totalRows`, `totalColumns`).
+- Retorna `null` quando a entidade é `null`.
+- Mapeia sala com `id` específico corretamente.
+- Mapeia dados do cinema corretamente (`cinemaResDTO`).
+- Mapeia todos os campos sem perda de dados.
+- Mapeia diferentes nomes de sala.
+- Mapeia capacidade da sala corretamente (`totalRows`, `totalColumns`).
+- Preserva integridade de todos os dados mapeados.

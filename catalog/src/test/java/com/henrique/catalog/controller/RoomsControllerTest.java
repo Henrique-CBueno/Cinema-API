@@ -2,6 +2,7 @@ package com.henrique.catalog.controller;
 
 import com.henrique.catalog.domain.dto.global.PaginationParams;
 import com.henrique.catalog.domain.dto.res.rooms.RoomsResDTO;
+import com.henrique.catalog.factory.RoomFactory;
 import com.henrique.catalog.factory.RoomResponseFactory;
 import com.henrique.catalog.infra.padronize.SuccessListDataResponse;
 import com.henrique.catalog.service.RoomsService;
@@ -205,4 +206,110 @@ class RoomsControllerTest {
             assertThat(body.data().getFirst()).isInstanceOf(RoomsResDTO.class);
         }
     }
-}
+    @Nested
+    class GetRoomFromCinemaByRoomId {
+
+        @Test
+        void shouldReturnRoomWithHttpOK() {
+            // ARRANGE
+            UUID cinemaId = UUID.randomUUID();
+            UUID roomId = UUID.randomUUID();
+            RoomsResDTO roomDTO = RoomFactory.createRoomsResponseDTO(roomId, "Sala 1");
+
+            doReturn(roomDTO)
+                    .when(roomsService)
+                    .getRoomByCinemaIdAndRoomId(cinemaId, roomId);
+
+            // ACT
+            ResponseEntity<com.henrique.catalog.infra.padronize.SuccessResponse> response = 
+                    roomsController.getRoomFromCinemaByRoomId(cinemaId, roomId);
+
+            // ASSERT
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().data()).isEqualTo(roomDTO);
+            verify(roomsService, times(1)).getRoomByCinemaIdAndRoomId(cinemaId, roomId);
+        }
+
+        @Test
+        void shouldPassCorrectCinemaIdAndRoomIdToService() {
+            // ARRANGE
+            UUID cinemaId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+            UUID roomId = UUID.fromString("660e8400-e29b-41d4-a716-446655440000");
+            RoomsResDTO roomDTO = RoomFactory.createRoomsResponseDTO(roomId, "Sala VIP");
+
+            doReturn(roomDTO)
+                    .when(roomsService)
+                    .getRoomByCinemaIdAndRoomId(cinemaId, roomId);
+
+            // ACT
+            roomsController.getRoomFromCinemaByRoomId(cinemaId, roomId);
+
+            // ASSERT
+            verify(roomsService, times(1)).getRoomByCinemaIdAndRoomId(
+                    eq(UUID.fromString("550e8400-e29b-41d4-a716-446655440000")),
+                    eq(UUID.fromString("660e8400-e29b-41d4-a716-446655440000"))
+            );
+        }
+
+        @Test
+        void shouldReturnCorrectRoomData() {
+            // ARRANGE
+            UUID cinemaId = UUID.randomUUID();
+            UUID roomId = UUID.randomUUID();
+            RoomsResDTO roomDTO = RoomFactory.createRoomsResponseDTO(roomId, "Sala IMAX");
+
+            doReturn(roomDTO)
+                    .when(roomsService)
+                    .getRoomByCinemaIdAndRoomId(cinemaId, roomId);
+
+            // ACT
+            ResponseEntity<com.henrique.catalog.infra.padronize.SuccessResponse> response = 
+                    roomsController.getRoomFromCinemaByRoomId(cinemaId, roomId);
+
+            // ASSERT
+            assertThat(response.getBody()).isNotNull();
+            RoomsResDTO returnedRoom = (RoomsResDTO) response.getBody().data();
+            assertThat(returnedRoom.id()).isEqualTo(roomId);
+            assertThat(returnedRoom.name()).isEqualTo("Sala IMAX");
+        }
+
+        @Test
+        void shouldReturnSuccessResponseWithCorrectStructure() {
+            // ARRANGE
+            UUID cinemaId = UUID.randomUUID();
+            UUID roomId = UUID.randomUUID();
+            RoomsResDTO roomDTO = RoomFactory.createRoomsResponseDTO(roomId, "Sala Premium");
+
+            doReturn(roomDTO)
+                    .when(roomsService)
+                    .getRoomByCinemaIdAndRoomId(cinemaId, roomId);
+
+            // ACT
+            ResponseEntity<com.henrique.catalog.infra.padronize.SuccessResponse> response = 
+                    roomsController.getRoomFromCinemaByRoomId(cinemaId, roomId);
+
+            // ASSERT
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().data()).isNotNull();
+            assertThat(response.getBody().timestamp()).isNotNull();
+        }
+
+        @Test
+        void shouldCallServiceOnlyOnce() {
+            // ARRANGE
+            UUID cinemaId = UUID.randomUUID();
+            UUID roomId = UUID.randomUUID();
+            RoomsResDTO roomDTO = RoomFactory.createRoomsResponseDTO(roomId, "Sala 3D");
+
+            doReturn(roomDTO)
+                    .when(roomsService)
+                    .getRoomByCinemaIdAndRoomId(cinemaId, roomId);
+
+            // ACT
+            roomsController.getRoomFromCinemaByRoomId(cinemaId, roomId);
+
+            // ASSERT
+            verify(roomsService, times(1)).getRoomByCinemaIdAndRoomId(any(), any());
+        }
+    }}

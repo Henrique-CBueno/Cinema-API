@@ -55,14 +55,15 @@ class RoomsServiceTest {
             
             Page<RoomEntity> entityPage = new PageImpl<>(List.of(room1, room2));
             
+            RoomsResDTO dto1 = RoomFactory.createRoomsResponseDTO(room1.getId(), "Sala 1");
+            RoomsResDTO dto2 = RoomFactory.createRoomsResponseDTO(room2.getId(), "Sala 2");
+            
             when(roomsRepository.findByCinemaId(cinemaId, pageable))
                     .thenReturn(entityPage);
-            when(cinemaMapper.toDTO(cinemaEntity))
-                    .thenReturn(new com.henrique.catalog.domain.dto.res.cinema.CinemaResDTO(
-                            cinemaEntity.getId(),
-                            cinemaEntity.getName(),
-                            cinemaEntity.getCity()
-                    ));
+            when(roomsMapper.toDTO(room1))
+                    .thenReturn(dto1);
+            when(roomsMapper.toDTO(room2))
+                    .thenReturn(dto2);
 
             // Act
             Page<RoomsResDTO> result = roomsService.getAllRooms(pageable, cinemaId);
@@ -73,7 +74,7 @@ class RoomsServiceTest {
             assertEquals("Sala 1", result.getContent().get(0).name());
             assertEquals("Sala 2", result.getContent().get(1).name());
             verify(roomsRepository, times(1)).findByCinemaId(cinemaId, pageable);
-            verify(cinemaMapper, times(2)).toDTO(cinemaEntity);
+            verify(roomsMapper, times(2)).toDTO(any(RoomEntity.class));
         }
 
         @Test
@@ -94,7 +95,7 @@ class RoomsServiceTest {
             assertEquals(0, result.getTotalElements());
             assertTrue(result.getContent().isEmpty());
             verify(roomsRepository, times(1)).findByCinemaId(cinemaId, pageable);
-            verify(cinemaMapper, never()).toDTO(any());
+            verify(roomsMapper, never()).toDTO(any());
         }
 
         @Test
@@ -125,14 +126,12 @@ class RoomsServiceTest {
             
             Page<RoomEntity> entityPage = new PageImpl<>(List.of(room));
             
+            RoomsResDTO dto = RoomFactory.createRoomsResponseDTO(room.getId(), "Sala Premium");
+            
             when(roomsRepository.findByCinemaId(cinemaId, pageable))
                     .thenReturn(entityPage);
-            when(cinemaMapper.toDTO(cinemaEntity))
-                    .thenReturn(new com.henrique.catalog.domain.dto.res.cinema.CinemaResDTO(
-                            cinemaEntity.getId(),
-                            cinemaEntity.getName(),
-                            cinemaEntity.getCity()
-                    ));
+            when(roomsMapper.toDTO(room))
+                    .thenReturn(dto);
 
             // Act
             Page<RoomsResDTO> result = roomsService.getAllRooms(pageable, cinemaId);
@@ -162,6 +161,121 @@ class RoomsServiceTest {
                     eq(UUID.fromString("550e8400-e29b-41d4-a716-446655440000")),
                     any()
             );
+        }
+    }
+
+    @Nested
+    class GetRoomByCinemaIdAndRoomId {
+
+        @Test
+        void shouldReturnRoomWhenExists() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            UUID roomId = UUID.randomUUID();
+            
+            CinemaEntity cinemaEntity = RoomFactory.createCinemaEntity();
+            RoomEntity roomEntity = RoomFactory.createRoomEntity(roomId, "Sala VIP", cinemaEntity);
+            
+            when(roomsRepository.findByCinemaIdAndId(cinemaId, roomId))
+                    .thenReturn(java.util.Optional.of(roomEntity));
+            when(roomsMapper.toDTO(roomEntity))
+                    .thenReturn(RoomFactory.createRoomsResponseDTO(roomId, "Sala VIP"));
+
+            // Act
+            RoomsResDTO result = roomsService.getRoomByCinemaIdAndRoomId(cinemaId, roomId);
+
+            // Assert
+            assertNotNull(result);
+            assertEquals(roomId, result.id());
+            assertEquals("Sala VIP", result.name());
+            verify(roomsRepository, times(1)).findByCinemaIdAndId(cinemaId, roomId);
+            verify(roomsMapper, times(1)).toDTO(roomEntity);
+        }
+
+        @Test
+        void shouldThrowNotFoundExceptionWhenRoomDoesNotExist() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            UUID roomId = UUID.randomUUID();
+            
+            when(roomsRepository.findByCinemaIdAndId(cinemaId, roomId))
+                    .thenReturn(java.util.Optional.empty());
+
+            // Act & Assert
+            com.henrique.catalog.infra.exceptions.NotFoundException exception = 
+                    assertThrows(com.henrique.catalog.infra.exceptions.NotFoundException.class,
+                            () -> roomsService.getRoomByCinemaIdAndRoomId(cinemaId, roomId));
+            
+            assertTrue(exception.getMessage().contains(roomId.toString()));
+            assertTrue(exception.getMessage().contains(cinemaId.toString()));
+            verify(roomsRepository, times(1)).findByCinemaIdAndId(cinemaId, roomId);
+            verify(roomsMapper, never()).toDTO(any());
+        }
+
+        @Test
+        void shouldCallRepositoryWithCorrectParameters() {
+            // Arrange
+            UUID cinemaId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+            UUID roomId = UUID.fromString("660e8400-e29b-41d4-a716-446655440000");
+            
+            CinemaEntity cinemaEntity = RoomFactory.createCinemaEntity();
+            RoomEntity roomEntity = RoomFactory.createRoomEntity(roomId, "Sala 1", cinemaEntity);
+            
+            when(roomsRepository.findByCinemaIdAndId(cinemaId, roomId))
+                    .thenReturn(java.util.Optional.of(roomEntity));
+            when(roomsMapper.toDTO(roomEntity))
+                    .thenReturn(RoomFactory.createRoomsResponseDTO(roomId, "Sala 1"));
+
+            // Act
+            roomsService.getRoomByCinemaIdAndRoomId(cinemaId, roomId);
+
+            // Assert
+            verify(roomsRepository, times(1)).findByCinemaIdAndId(
+                    eq(UUID.fromString("550e8400-e29b-41d4-a716-446655440000")),
+                    eq(UUID.fromString("660e8400-e29b-41d4-a716-446655440000"))
+            );
+        }
+
+        @Test
+        void shouldMapRoomEntityToDTOCorrectly() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            UUID roomId = UUID.randomUUID();
+            
+            CinemaEntity cinemaEntity = RoomFactory.createCinemaEntity();
+            RoomEntity roomEntity = RoomFactory.createRoomEntity(roomId, "Sala IMAX", cinemaEntity);
+            RoomsResDTO expectedDTO = RoomFactory.createRoomsResponseDTO(roomId, "Sala IMAX");
+            
+            when(roomsRepository.findByCinemaIdAndId(cinemaId, roomId))
+                    .thenReturn(java.util.Optional.of(roomEntity));
+            when(roomsMapper.toDTO(roomEntity))
+                    .thenReturn(expectedDTO);
+
+            // Act
+            RoomsResDTO result = roomsService.getRoomByCinemaIdAndRoomId(cinemaId, roomId);
+
+            // Assert
+            assertEquals(expectedDTO, result);
+            assertEquals("Sala IMAX", result.name());
+        }
+
+        @Test
+        void shouldThrowExceptionWithCorrectMessageFormat() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            UUID roomId = UUID.randomUUID();
+            
+            when(roomsRepository.findByCinemaIdAndId(cinemaId, roomId))
+                    .thenReturn(java.util.Optional.empty());
+
+            // Act & Assert
+            com.henrique.catalog.infra.exceptions.NotFoundException exception = 
+                    assertThrows(com.henrique.catalog.infra.exceptions.NotFoundException.class,
+                            () -> roomsService.getRoomByCinemaIdAndRoomId(cinemaId, roomId));
+            
+            String expectedMessage = String.format("Não existe uma sala com id %s no cinema com id %s", 
+                    roomId, cinemaId);
+            assertEquals(expectedMessage, exception.getMessage());
         }
     }
 }
