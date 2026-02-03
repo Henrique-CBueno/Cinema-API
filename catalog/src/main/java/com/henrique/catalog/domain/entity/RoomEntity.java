@@ -5,7 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.SQLRestriction;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -14,6 +16,8 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+// Esta anotação faz com que Todos "SELECT" adicione automaticamente essa cláusula
+@SQLRestriction("active = true")
 public class RoomEntity {
 
     @Id
@@ -38,4 +42,7 @@ public class RoomEntity {
 
     @Column(nullable = false)
     private Boolean active = true;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 }
