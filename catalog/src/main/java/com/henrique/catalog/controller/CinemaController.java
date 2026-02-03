@@ -2,6 +2,7 @@ package com.henrique.catalog.controller;
 
 import com.henrique.catalog.domain.dto.global.PaginationParams;
 import com.henrique.catalog.domain.dto.req.cinema.CreateCinemaReqDTO;
+import com.henrique.catalog.domain.dto.req.cinema.UpdateCinemaReqDTO;
 import com.henrique.catalog.domain.dto.res.cinema.CinemaResDTO;
 import com.henrique.catalog.infra.padronize.SuccessListDataResponse;
 import com.henrique.catalog.infra.padronize.SuccessResponse;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -62,5 +64,15 @@ public class CinemaController {
                 .toUri();
 
         return ResponseEntity.created(uri).build();
+    }
+
+    @PatchMapping("{id}")
+    public ResponseEntity<SuccessResponse> partialUpdateCinema(@PathVariable UUID id,
+                                                               @RequestBody UpdateCinemaReqDTO dto) {
+
+        CinemaResDTO updatedCinema = cinemaService.partialUpdate(id,
+                dto);
+
+        return ResponseEntity.ok(new SuccessResponse(updatedCinema));
     }
 }

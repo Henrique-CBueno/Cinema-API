@@ -1,6 +1,7 @@
 package com.henrique.catalog.service;
 
 import com.henrique.catalog.domain.dto.req.cinema.CreateCinemaReqDTO;
+import com.henrique.catalog.domain.dto.req.cinema.UpdateCinemaReqDTO;
 import com.henrique.catalog.domain.dto.res.cinema.CinemaResDTO;
 import com.henrique.catalog.domain.entity.CinemaEntity;
 import com.henrique.catalog.domain.mapper.CinemaMapper;
@@ -50,6 +51,31 @@ public class CinemaService {
             CinemaEntity newCinema = cinemaRepository.saveAndFlush(cinema);
 
             return newCinema.getId();
+        } catch (DataIntegrityViolationException e) {
+            throw new DuplicateResourceException(ExceptionsConstants.DUPLICATE_RESOURCE, "name e city iguais");
+        }
+    }
+
+    @Transactional
+    public CinemaResDTO partialUpdate(UUID id,
+                                      UpdateCinemaReqDTO dto) {
+
+        try {
+
+            int affectedRows = cinemaRepository.updatePartial(id,
+                    dto.name(),
+                    dto.city());
+
+            if (affectedRows < 1) throw new NotFoundException(String.format(
+                    ExceptionsConstants.CINEMA_DONT_EXISTS,
+                    id
+            ));
+
+            return cinemaRepository.findById(id)
+                    .map(cinemaMapper::toDTO)
+                    .orElseThrow(() -> new NotFoundException(
+                            String.format(ExceptionsConstants.MOVIE_DONT_EXISTS, id)
+                    ));
         } catch (DataIntegrityViolationException e) {
             throw new DuplicateResourceException(ExceptionsConstants.DUPLICATE_RESOURCE, "name e city iguais");
         }
