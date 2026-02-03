@@ -1,12 +1,16 @@
 package com.henrique.catalog.service;
 
+import com.henrique.catalog.domain.dto.req.cinema.CreateCinemaReqDTO;
 import com.henrique.catalog.domain.dto.res.cinema.CinemaResDTO;
 import com.henrique.catalog.domain.entity.CinemaEntity;
 import com.henrique.catalog.domain.mapper.CinemaMapper;
 import com.henrique.catalog.infra.constants.ExceptionsConstants;
+import com.henrique.catalog.infra.exceptions.DuplicateResourceException;
 import com.henrique.catalog.infra.exceptions.NotFoundException;
 import com.henrique.catalog.repository.CinemaRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -34,5 +38,20 @@ public class CinemaService {
                                 id
                         )
                 ));
+    }
+
+    @Transactional
+    public UUID createCinema(CreateCinemaReqDTO dto,
+                             UUID userId) {
+
+        try {
+            CinemaEntity cinema = cinemaMapper.toEntity(dto);
+            cinema.setCreatedByUserId(userId);
+            CinemaEntity newCinema = cinemaRepository.saveAndFlush(cinema);
+
+            return newCinema.getId();
+        } catch (DataIntegrityViolationException e) {
+            throw new DuplicateResourceException(ExceptionsConstants.DUPLICATE_RESOURCE, "name e city iguais");
+        }
     }
 }
