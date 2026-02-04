@@ -469,4 +469,55 @@ class GlobalExceptionHandlerTest {
                         assertEquals(message2, response2.getBody().error());
                 }
         }
+
+        @Nested
+        class HandleTypeMismatch {
+
+                @Test
+                void shouldReturnBadRequestStatusForTypeMismatch() {
+                        // Act
+                        ResponseEntity<ErrorGlobalResponse> response = exceptionHandler.handleTypeMismatch();
+
+                        // Assert
+                        assertNotNull(response);
+                        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+                        assertNotNull(response.getBody());
+                }
+
+                @Test
+                void shouldReturnDefaultErrorMessageForTypeMismatch() {
+                        // Act
+                        ResponseEntity<ErrorGlobalResponse> response = exceptionHandler.handleTypeMismatch();
+
+                        // Assert
+                        assert response.getBody() != null;
+                        assertEquals("BODY NAO COMPATIVEL", response.getBody().error());
+                }
+
+                @Test
+                void shouldReturnBadRequestStatusNameInResponse() {
+                        // Act
+                        ResponseEntity<ErrorGlobalResponse> response = exceptionHandler.handleTypeMismatch();
+
+                        // Assert
+                        assert response.getBody() != null;
+                        assertEquals(HttpStatus.BAD_REQUEST.name(), response.getBody().status());
+                }
+
+                @Test
+                void shouldIncludeTimestampForTypeMismatch() {
+                        // Arrange
+                        LocalDateTime beforeTest = LocalDateTime.now();
+
+                        // Act
+                        ResponseEntity<ErrorGlobalResponse> response = exceptionHandler.handleTypeMismatch();
+                        LocalDateTime afterTest = LocalDateTime.now();
+
+                        // Assert
+                        assert response.getBody() != null;
+                        assertNotNull(response.getBody().timestamp());
+                        assertTrue(response.getBody().timestamp().isAfter(beforeTest.minusSeconds(1)));
+                        assertTrue(response.getBody().timestamp().isBefore(afterTest.plusSeconds(1)));
+                }
+        }
 }
