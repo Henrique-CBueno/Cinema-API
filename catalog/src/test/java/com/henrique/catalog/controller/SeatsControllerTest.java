@@ -1,6 +1,7 @@
 package com.henrique.catalog.controller;
 
 import com.henrique.catalog.domain.dto.global.PaginationParams;
+import com.henrique.catalog.domain.dto.req.seat.CreateSeatReqDTO;
 import com.henrique.catalog.domain.dto.res.seat.SeatResDTO;
 import com.henrique.catalog.factory.SeatResponseFactory;
 import com.henrique.catalog.infra.padronize.SuccessListDataResponse;
@@ -16,7 +17,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -237,6 +242,200 @@ class SeatsControllerTest {
 
             // Assert
             verify(seatsService, times(1)).getSeatsByCinemaRoom(any(UUID.class), any(Pageable.class));
+        }
+    }
+
+    @Nested
+    class CreateSeatsInCinemaRoom {
+
+        @Test
+        void shouldCreateSeatsWithHttpCREATED() {
+            // Arrange
+            String cinemaId = UUID.randomUUID().toString();
+            String roomId = UUID.randomUUID().toString();
+            String userId = UUID.randomUUID().toString();
+
+            List<CreateSeatReqDTO> seats = List.of(
+                    new CreateSeatReqDTO("A", 1),
+                    new CreateSeatReqDTO("A", 2));
+
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRequestURI("/cinemas/" + cinemaId + "/rooms/" + roomId + "/seats");
+            RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+            doNothing().when(seatsService).createSeatsInCinemaRoom(
+                    UUID.fromString(cinemaId),
+                    UUID.fromString(roomId),
+                    seats,
+                    UUID.fromString(userId));
+
+            // Act
+            ResponseEntity<Void> response = seatsController.createSeatsInCinemaRoom(
+                    cinemaId,
+                    roomId,
+                    seats,
+                    userId);
+
+            // Assert
+            assertEquals(HttpStatus.CREATED, response.getStatusCode());
+            assertNotNull(response.getHeaders().getLocation());
+
+            // Cleanup
+            RequestContextHolder.resetRequestAttributes();
+        }
+
+        @Test
+        void shouldPassCorrectParametersToService() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            UUID roomId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+
+            List<CreateSeatReqDTO> seats = List.of(
+                    new CreateSeatReqDTO("A", 1));
+
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRequestURI("/cinemas/" + cinemaId + "/rooms/" + roomId + "/seats");
+            RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+            ArgumentCaptor<UUID> cinemaCaptor = ArgumentCaptor.forClass(UUID.class);
+            ArgumentCaptor<UUID> roomCaptor = ArgumentCaptor.forClass(UUID.class);
+            ArgumentCaptor<List> seatsCaptor = ArgumentCaptor.forClass(List.class);
+            ArgumentCaptor<UUID> userCaptor = ArgumentCaptor.forClass(UUID.class);
+
+            doNothing().when(seatsService).createSeatsInCinemaRoom(
+                    cinemaCaptor.capture(),
+                    roomCaptor.capture(),
+                    seatsCaptor.capture(),
+                    userCaptor.capture());
+
+            // Act
+            seatsController.createSeatsInCinemaRoom(
+                    cinemaId.toString(),
+                    roomId.toString(),
+                    seats,
+                    userId.toString());
+
+            // Assert
+            assertEquals(cinemaId, cinemaCaptor.getValue());
+            assertEquals(roomId, roomCaptor.getValue());
+            assertEquals(seats, seatsCaptor.getValue());
+            assertEquals(userId, userCaptor.getValue());
+
+            // Cleanup
+            RequestContextHolder.resetRequestAttributes();
+        }
+
+        @Test
+        void shouldCallServiceCreateMethod() {
+            // Arrange
+            String cinemaId = UUID.randomUUID().toString();
+            String roomId = UUID.randomUUID().toString();
+            String userId = UUID.randomUUID().toString();
+
+            List<CreateSeatReqDTO> seats = List.of(
+                    new CreateSeatReqDTO("A", 1));
+
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRequestURI("/cinemas/" + cinemaId + "/rooms/" + roomId + "/seats");
+            RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+            doNothing().when(seatsService).createSeatsInCinemaRoom(
+                    any(UUID.class),
+                    any(UUID.class),
+                    any(List.class),
+                    any(UUID.class));
+
+            // Act
+            seatsController.createSeatsInCinemaRoom(cinemaId, roomId, seats, userId);
+
+            // Assert
+            verify(seatsService, times(1)).createSeatsInCinemaRoom(
+                    any(UUID.class),
+                    any(UUID.class),
+                    any(List.class),
+                    any(UUID.class));
+
+            // Cleanup
+            RequestContextHolder.resetRequestAttributes();
+        }
+
+        @Test
+        void shouldReturnLocationHeader() {
+            // Arrange
+            String cinemaId = UUID.randomUUID().toString();
+            String roomId = UUID.randomUUID().toString();
+            String userId = UUID.randomUUID().toString();
+
+            List<CreateSeatReqDTO> seats = List.of(
+                    new CreateSeatReqDTO("B", 5));
+
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRequestURI("/cinemas/" + cinemaId + "/rooms/" + roomId + "/seats");
+            RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+            doNothing().when(seatsService).createSeatsInCinemaRoom(
+                    any(UUID.class),
+                    any(UUID.class),
+                    any(List.class),
+                    any(UUID.class));
+
+            // Act
+            ResponseEntity<Void> response = seatsController.createSeatsInCinemaRoom(
+                    cinemaId,
+                    roomId,
+                    seats,
+                    userId);
+
+            // Assert
+            assertNotNull(response.getHeaders().getLocation());
+            assertTrue(response.getHeaders().getLocation().toString().contains(roomId));
+
+            // Cleanup
+            RequestContextHolder.resetRequestAttributes();
+        }
+
+        @Test
+        void shouldCreateMultipleSeats() {
+            // Arrange
+            String cinemaId = UUID.randomUUID().toString();
+            String roomId = UUID.randomUUID().toString();
+            String userId = UUID.randomUUID().toString();
+
+            List<CreateSeatReqDTO> seats = List.of(
+                    new CreateSeatReqDTO("A", 1),
+                    new CreateSeatReqDTO("A", 2),
+                    new CreateSeatReqDTO("B", 1),
+                    new CreateSeatReqDTO("B", 2),
+                    new CreateSeatReqDTO("C", 1));
+
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRequestURI("/cinemas/" + cinemaId + "/rooms/" + roomId + "/seats");
+            RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+            doNothing().when(seatsService).createSeatsInCinemaRoom(
+                    any(UUID.class),
+                    any(UUID.class),
+                    any(List.class),
+                    any(UUID.class));
+
+            // Act
+            ResponseEntity<Void> response = seatsController.createSeatsInCinemaRoom(
+                    cinemaId,
+                    roomId,
+                    seats,
+                    userId);
+
+            // Assert
+            assertEquals(HttpStatus.CREATED, response.getStatusCode());
+            verify(seatsService, times(1)).createSeatsInCinemaRoom(
+                    any(UUID.class),
+                    any(UUID.class),
+                    any(List.class),
+                    any(UUID.class));
+
+            // Cleanup
+            RequestContextHolder.resetRequestAttributes();
         }
     }
 }

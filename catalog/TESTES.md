@@ -128,6 +128,14 @@ Arquivo: [src/test/java/com/henrique/catalog/infra/exceptionHandler/GlobalExcept
 - Suporta diferentes mensagens de validação.
 - Valida estrutura de `ErrorGlobalResponse`.
 
+### `handleUnprocessableEntity(UnprocessableEntityException)`
+
+- Retorna **422 UNPROCESSABLE_CONTENT**.
+- Retorna mensagem de erro correta.
+- Retorna `status` com o nome do HTTP status.
+- Inclui `timestamp` válido.
+- Suporta diferentes mensagens de erro.
+
 ---
 
 ## MovieMapperTest
@@ -285,6 +293,13 @@ Arquivo: [src/test/java/com/henrique/catalog/service/RoomsServiceTest.java](src/
 - Mapeia `RoomEntity` para DTO corretamente.
 - Lança exceção com formato de mensagem correto.
 
+### `getRoomByCinemaIdAndRoomIdReturningEntity(UUID, UUID)`
+
+- Retorna `RoomEntity` quando a sala existe no cinema.
+- Lança `NotFoundException` quando a sala não existe.
+- Mensagem de erro contém o `roomId` e `cinemaId` solicitados.
+- Chama repository com os parâmetros corretos.
+
 ### `createRoomForCinemaId(UUID, CreateRoomReqDTO, UUID)`
 
 - Cria sala com sucesso e retorna `UUID`.
@@ -325,6 +340,15 @@ Arquivo: [src/test/java/com/henrique/catalog/service/SeatsServiceTest.java](src/
 - Chama `findAllByRoomId` com os parâmetros corretos.
 - Retorna um único assento quando apenas um existe.
 
+### `createSeatsInCinemaRoom(UUID, UUID, List<CreateSeatReqDTO>, UUID)`
+
+- Cria assentos com sucesso.
+- Valida posição de assento inválida (coluna) com `UnprocessableEntityException`.
+- Valida posição de assento inválida (fileira) com `UnprocessableEntityException`.
+- Lança `DuplicateResourceException` quando já existe assento ativo na posição.
+- Define `createdByUserId` em todos os assentos criados.
+- Define `room` em todos os assentos criados.
+
 ---
 
 ## SeatsControllerTest
@@ -343,6 +367,13 @@ Arquivo: [src/test/java/com/henrique/catalog/controller/SeatsControllerTest.java
 - Retorna assentos com informações detalhadas (`id`, `roomId`, `rowLabel`, `columnNumber`).
 - Chama o serviço uma única vez por requisição.
 
+### `createSeatsInCinemaRoom(String, String, List<CreateSeatReqDTO>, String)`
+
+- Retorna **201 CREATED**.
+- Envia `cinemaId`, `roomId`, lista de assentos e `userId` corretos ao serviço.
+- Retorna `Location` preenchido.
+- Suporta criação de múltiplos assentos.
+
 ---
 
 ## SeatMapperTest
@@ -359,6 +390,15 @@ Arquivo: [src/test/java/com/henrique/catalog/domain/mapper/SeatMapperTest.java](
 - Mapeia diferentes `rowLabel` (A, B, C, Z, etc.).
 - Mapeia `columnNumber` como `String` corretamente.
 - Preserva integridade de todos os dados mapeados.
+
+### `toEntity(CreateSeatReqDTO)`
+
+- Mapeia todos os campos do DTO para a entidade (`rowLabel`, `columnNumber`).
+- Retorna `null` quando o DTO é `null`.
+- Não mapeia `id` ao criar entidade.
+- Não mapeia `room` ao criar entidade.
+- Não mapeia `createdByUserId` ao criar entidade.
+- Mapeia diferentes `rowLabel` e `columnNumber` corretamente.
 
 ---
 

@@ -1,5 +1,6 @@
 package com.henrique.catalog.domain.mapper;
 
+import com.henrique.catalog.domain.dto.req.seat.CreateSeatReqDTO;
 import com.henrique.catalog.domain.dto.res.seat.SeatResDTO;
 import com.henrique.catalog.domain.entity.RoomEntity;
 import com.henrique.catalog.domain.entity.SeatEntity;
@@ -163,6 +164,125 @@ class SeatMapperTest {
             assertEquals(roomId, response.roomId());
             assertEquals(rowLabel, response.rowLabel());
             assertEquals(String.valueOf(columnNumber), response.columnNumber());
+        }
+    }
+
+    @Nested
+    class ToEntity {
+
+        @Test
+        void shouldMapDTOToEntity() {
+            // Arrange
+            CreateSeatReqDTO dto = new CreateSeatReqDTO("A", 1);
+
+            // Act
+            SeatEntity response = seatMapper.toEntity(dto);
+
+            // Assert
+            assertNotNull(response);
+            assertEquals(dto.rowLabel(), response.getRowLabel());
+            assertEquals(dto.columnNumber(), response.getColumnNumber());
+        }
+
+        @Test
+        void shouldReturnNullWhenDTOIsNull() {
+            // Arrange
+            CreateSeatReqDTO dto = null;
+
+            // Act
+            SeatEntity response = seatMapper.toEntity(dto);
+
+            // Assert
+            assertNull(response);
+        }
+
+        @Test
+        void shouldMapDifferentRowLabels() {
+            // Arrange
+            CreateSeatReqDTO dto1 = new CreateSeatReqDTO("A", 1);
+            CreateSeatReqDTO dto2 = new CreateSeatReqDTO("Z", 10);
+
+            // Act
+            SeatEntity response1 = seatMapper.toEntity(dto1);
+            SeatEntity response2 = seatMapper.toEntity(dto2);
+
+            // Assert
+            assertNotNull(response1);
+            assertNotNull(response2);
+            assertEquals("A", response1.getRowLabel());
+            assertEquals("Z", response2.getRowLabel());
+        }
+
+        @Test
+        void shouldMapDifferentColumnNumbers() {
+            // Arrange
+            CreateSeatReqDTO dto1 = new CreateSeatReqDTO("A", 1);
+            CreateSeatReqDTO dto2 = new CreateSeatReqDTO("A", 50);
+
+            // Act
+            SeatEntity response1 = seatMapper.toEntity(dto1);
+            SeatEntity response2 = seatMapper.toEntity(dto2);
+
+            // Assert
+            assertNotNull(response1);
+            assertNotNull(response2);
+            assertEquals(1, response1.getColumnNumber());
+            assertEquals(50, response2.getColumnNumber());
+        }
+
+        @Test
+        void shouldNotMapIdWhenCreatingEntity() {
+            // Arrange
+            CreateSeatReqDTO dto = new CreateSeatReqDTO("B", 5);
+
+            // Act
+            SeatEntity response = seatMapper.toEntity(dto);
+
+            // Assert
+            assertNotNull(response);
+            assertNull(response.getId());
+        }
+
+        @Test
+        void shouldNotMapRoomWhenCreatingEntity() {
+            // Arrange
+            CreateSeatReqDTO dto = new CreateSeatReqDTO("C", 8);
+
+            // Act
+            SeatEntity response = seatMapper.toEntity(dto);
+
+            // Assert
+            assertNotNull(response);
+            assertNull(response.getRoom());
+        }
+
+        @Test
+        void shouldNotMapCreatedByUserIdWhenCreatingEntity() {
+            // Arrange
+            CreateSeatReqDTO dto = new CreateSeatReqDTO("D", 12);
+
+            // Act
+            SeatEntity response = seatMapper.toEntity(dto);
+
+            // Assert
+            assertNotNull(response);
+            assertNull(response.getCreatedByUserId());
+        }
+
+        @Test
+        void shouldMapAllFieldsWithoutDataLoss() {
+            // Arrange
+            String rowLabel = "F";
+            Integer columnNumber = 15;
+            CreateSeatReqDTO dto = new CreateSeatReqDTO(rowLabel, columnNumber);
+
+            // Act
+            SeatEntity response = seatMapper.toEntity(dto);
+
+            // Assert
+            assertNotNull(response);
+            assertEquals(rowLabel, response.getRowLabel());
+            assertEquals(columnNumber, response.getColumnNumber());
         }
     }
 }

@@ -285,6 +285,71 @@ class RoomsServiceTest {
         }
 
         @Nested
+        class GetRoomByCinemaIdAndRoomIdReturningEntity {
+
+                @Test
+                void shouldReturnRoomEntityWhenExists() {
+                        // Arrange
+                        UUID cinemaId = UUID.randomUUID();
+                        UUID roomId = UUID.randomUUID();
+
+                        CinemaEntity cinemaEntity = RoomFactory.createCinemaEntity();
+                        RoomEntity roomEntity = RoomFactory.createRoomEntity(roomId, "Sala VIP", cinemaEntity);
+
+                        when(roomsRepository.findByCinemaIdAndId(cinemaId, roomId))
+                                        .thenReturn(java.util.Optional.of(roomEntity));
+
+                        // Act
+                        RoomEntity result = roomsService.getRoomByCinemaIdAndRoomIdReturningEntity(cinemaId, roomId);
+
+                        // Assert
+                        assertNotNull(result);
+                        assertEquals(roomId, result.getId());
+                        assertEquals("Sala VIP", result.getName());
+                        verify(roomsRepository, times(1)).findByCinemaIdAndId(cinemaId, roomId);
+                }
+
+                @Test
+                void shouldThrowNotFoundExceptionWhenRoomDoesNotExist() {
+                        // Arrange
+                        UUID cinemaId = UUID.randomUUID();
+                        UUID roomId = UUID.randomUUID();
+
+                        when(roomsRepository.findByCinemaIdAndId(cinemaId, roomId))
+                                        .thenReturn(java.util.Optional.empty());
+
+                        // Act & Assert
+                        NotFoundException exception = assertThrows(NotFoundException.class,
+                                        () -> roomsService.getRoomByCinemaIdAndRoomIdReturningEntity(cinemaId, roomId));
+
+                        assertTrue(exception.getMessage().contains(roomId.toString()));
+                        assertTrue(exception.getMessage().contains(cinemaId.toString()));
+                        verify(roomsRepository, times(1)).findByCinemaIdAndId(cinemaId, roomId);
+                }
+
+                @Test
+                void shouldCallRepositoryWithCorrectParameters() {
+                        // Arrange
+                        UUID cinemaId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+                        UUID roomId = UUID.fromString("660e8400-e29b-41d4-a716-446655440000");
+
+                        CinemaEntity cinemaEntity = RoomFactory.createCinemaEntity();
+                        RoomEntity roomEntity = RoomFactory.createRoomEntity(roomId, "Sala 1", cinemaEntity);
+
+                        when(roomsRepository.findByCinemaIdAndId(cinemaId, roomId))
+                                        .thenReturn(java.util.Optional.of(roomEntity));
+
+                        // Act
+                        roomsService.getRoomByCinemaIdAndRoomIdReturningEntity(cinemaId, roomId);
+
+                        // Assert
+                        verify(roomsRepository, times(1)).findByCinemaIdAndId(
+                                        eq(UUID.fromString("550e8400-e29b-41d4-a716-446655440000")),
+                                        eq(UUID.fromString("660e8400-e29b-41d4-a716-446655440000")));
+                }
+        }
+
+        @Nested
         class CreateRoomForCinemaId {
 
                 @Test
