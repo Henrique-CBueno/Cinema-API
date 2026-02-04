@@ -19,6 +19,9 @@ Test files:
 - [src/test/java/com/henrique/catalog/service/SeatsServiceTest.java](src/test/java/com/henrique/catalog/service/SeatsServiceTest.java)
 - [src/test/java/com/henrique/catalog/controller/SeatsControllerTest.java](src/test/java/com/henrique/catalog/controller/SeatsControllerTest.java)
 - [src/test/java/com/henrique/catalog/domain/mapper/SeatMapperTest.java](src/test/java/com/henrique/catalog/domain/mapper/SeatMapperTest.java)
+- [src/test/java/com/henrique/catalog/service/SessionServiceTest.java](src/test/java/com/henrique/catalog/service/SessionServiceTest.java)
+- [src/test/java/com/henrique/catalog/controller/SessionControllerTest.java](src/test/java/com/henrique/catalog/controller/SessionControllerTest.java)
+- [src/test/java/com/henrique/catalog/domain/mapper/SessionMapperTest.java](src/test/java/com/henrique/catalog/domain/mapper/SessionMapperTest.java)
 
 ---
 
@@ -413,6 +416,59 @@ Arquivo: [src/test/java/com/henrique/catalog/domain/mapper/SeatMapperTest.java](
 - Não mapeia `room` ao criar entidade.
 - Não mapeia `createdByUserId` ao criar entidade.
 - Mapeia diferentes `rowLabel` e `columnNumber` corretamente.
+
+---
+
+## SessionServiceTest
+
+Arquivo: [src/test/java/com/henrique/catalog/service/SessionServiceTest.java](src/test/java/com/henrique/catalog/service/SessionServiceTest.java)
+
+### `getSessions(Pageable, GetAllSessionParamsDTO)`
+
+- Retorna página com itens quando existem sessões.
+- Retorna página vazia quando não há sessões.
+- Calcula `startOfDay` e `endOfDay` quando `date` é informado.
+- Envia `startOfDay` e `endOfDay` como `null` quando `date` é `null`.
+- Chama o repositório com parâmetros corretos.
+- Mapeia todas as entidades para DTOs corretamente.
+
+### `getSessionById(UUID)`
+
+- Retorna `SessionResDTO` quando a sessão existe.
+- Lança `NotFoundException` quando a sessão não existe.
+- Mensagem de erro contém o `id` solicitado.
+- Chama o repositório com o `id` correto.
+
+---
+
+## SessionControllerTest
+
+Arquivo: [src/test/java/com/henrique/catalog/controller/SessionControllerTest.java](src/test/java/com/henrique/catalog/controller/SessionControllerTest.java)
+
+### `getAllSession(PaginationParams, GetAllSessionParamsDTO)`
+
+- Retorna **200 OK** quando há sessões.
+- Retorna **204 NO_CONTENT** quando a lista está vazia.
+- Envia parâmetros corretos de paginação e filtros ao serviço.
+- Retorna corpo correto (comparação ignorando `timestamp`).
+
+### `getSession(String)`
+
+- Retorna **200 OK**.
+- Envia `sessionId` correto ao serviço.
+- Retorna corpo correto (comparação ignorando `timestamp`).
+
+---
+
+## SessionMapperTest
+
+Arquivo: [src/test/java/com/henrique/catalog/domain/mapper/SessionMapperTest.java](src/test/java/com/henrique/catalog/domain/mapper/SessionMapperTest.java)
+
+### `toDTO(SessionEntity)`
+
+- Mapeia todos os campos da entidade para o DTO (`id`, `movie`, `room`, `startTime`, `endTime`, `price`, `sessionStatus`).
+- Retorna `null` quando a entidade é `null`.
+- Mapeia diferentes `SessionStatus` corretamente.
 
 ---
 
