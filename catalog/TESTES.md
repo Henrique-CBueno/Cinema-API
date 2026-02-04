@@ -16,6 +16,9 @@ Test files:
 - [src/test/java/com/henrique/catalog/service/RoomsServiceTest.java](src/test/java/com/henrique/catalog/service/RoomsServiceTest.java)
 - [src/test/java/com/henrique/catalog/controller/RoomsControllerTest.java](src/test/java/com/henrique/catalog/controller/RoomsControllerTest.java)
 - [src/test/java/com/henrique/catalog/domain/mapper/RoomsMapperTest.java](src/test/java/com/henrique/catalog/domain/mapper/RoomsMapperTest.java)
+- [src/test/java/com/henrique/catalog/service/SeatsServiceTest.java](src/test/java/com/henrique/catalog/service/SeatsServiceTest.java)
+- [src/test/java/com/henrique/catalog/controller/SeatsControllerTest.java](src/test/java/com/henrique/catalog/controller/SeatsControllerTest.java)
+- [src/test/java/com/henrique/catalog/domain/mapper/SeatMapperTest.java](src/test/java/com/henrique/catalog/domain/mapper/SeatMapperTest.java)
 
 ---
 
@@ -306,6 +309,56 @@ Arquivo: [src/test/java/com/henrique/catalog/service/RoomsServiceTest.java](src/
 - Lança `NotFoundException` quando não há linhas afetadas (affectedRows < 1).
 - Mensagem de erro contém o `roomId` e `cinemaId` solicitados.
 - Lança `NotFoundException` quando retorno é negativo.
+
+---
+
+## SeatsServiceTest
+
+Arquivo: [src/test/java/com/henrique/catalog/service/SeatsServiceTest.java](src/test/java/com/henrique/catalog/service/SeatsServiceTest.java)
+
+### `getSeatsByCinemaRoom(UUID, Pageable)`
+
+- Retorna página com itens quando existem assentos.
+- Retorna página vazia quando não há assentos para a sala.
+- Respeita parâmetros do `Pageable` (tamanho e número da página).
+- Mapeia todas as entidades para DTOs corretamente.
+- Chama `findAllByRoomId` com os parâmetros corretos.
+- Retorna um único assento quando apenas um existe.
+
+---
+
+## SeatsControllerTest
+
+Arquivo: [src/test/java/com/henrique/catalog/controller/SeatsControllerTest.java](src/test/java/com/henrique/catalog/controller/SeatsControllerTest.java)
+
+### `getAllSeatsByCinemaRoom(String, String, PaginationParams)`
+
+- Retorna **200 OK** quando há assentos.
+- Retorna **204 NO_CONTENT** quando a lista de assentos está vazia.
+- Envia parâmetros corretos de paginação ao serviço.
+- Envia `roomId` correto ao serviço.
+- Retorna múltiplos assentos com tamanho correto.
+- Retorna `SuccessListDataResponse` com estrutura correta (content, page, pageSize, totalElements).
+- Suporta diferentes tamanhos de página.
+- Retorna assentos com informações detalhadas (`id`, `roomId`, `rowLabel`, `columnNumber`).
+- Chama o serviço uma única vez por requisição.
+
+---
+
+## SeatMapperTest
+
+Arquivo: [src/test/java/com/henrique/catalog/domain/mapper/SeatMapperTest.java](src/test/java/com/henrique/catalog/domain/mapper/SeatMapperTest.java)
+
+### `toDTO(SeatEntity)`
+
+- Mapeia todos os campos da entidade para o DTO (`id`, `roomId`, `rowLabel`, `columnNumber`).
+- Retorna `null` quando a entidade é `null`.
+- Mapeia assento com `id` específico corretamente.
+- Mapeia `roomId` corretamente a partir da entidade `Room`.
+- Mapeia todos os campos sem perda de dados.
+- Mapeia diferentes `rowLabel` (A, B, C, Z, etc.).
+- Mapeia `columnNumber` como `String` corretamente.
+- Preserva integridade de todos os dados mapeados.
 
 ---
 
