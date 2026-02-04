@@ -38,4 +38,10 @@ public interface RoomsRepository extends JpaRepository<RoomEntity, UUID> {
             @Param("totalRows") Integer totalRows,
             @Param("totalColumns") Integer totalColumns
     );
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE RoomEntity r SET r.active = false WHERE r.id = :roomId AND r.cinema.id = :cinemaId")
+    int softDeleteById(@Param("roomId") UUID roomId,
+                       @Param("cinemaId") UUID cinemaId);
 }

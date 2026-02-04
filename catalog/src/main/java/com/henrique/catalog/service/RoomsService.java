@@ -104,4 +104,16 @@ public class RoomsService {
             throw new DuplicateResourceException(ExceptionsConstants.DUPLICATE_RESOURCE_ROOM, dto.name());
         }
     }
+
+    public void deleteRoomFromCinema(UUID roomId,
+                                     UUID cinemaId) {
+
+        int affectedRows = roomsRepository.softDeleteById(roomId, cinemaId);
+
+        if (affectedRows < 1) throw new NotFoundException(String.format(
+                ExceptionsConstants.ROOM_IN_CINEMA_DONT_EXISTS,
+                roomId,
+                cinemaId
+        ));
+    }
 }

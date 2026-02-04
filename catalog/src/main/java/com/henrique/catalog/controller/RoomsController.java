@@ -78,4 +78,13 @@ public class RoomsController {
 
         return ResponseEntity.ok(new SuccessResponse(updatedRoom));
     }
+
+    @DeleteMapping("{roomId}")
+    public ResponseEntity<Void> deleteRoomFromCinema(@PathVariable UUID cinemaId,
+                                                     @PathVariable UUID roomId) {
+
+        roomsService.deleteRoomFromCinema(roomId, cinemaId);
+
+        return ResponseEntity.noContent().build();
+    }
 }
