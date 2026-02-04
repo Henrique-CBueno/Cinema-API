@@ -3,6 +3,8 @@ package com.henrique.catalog.service;
 import com.henrique.catalog.domain.dto.req.sessions.GetAllSessionParamsDTO;
 import com.henrique.catalog.domain.dto.res.session.SessionResDTO;
 import com.henrique.catalog.domain.mapper.SessionMapper;
+import com.henrique.catalog.infra.constants.ExceptionsConstants;
+import com.henrique.catalog.infra.exceptions.NotFoundException;
 import com.henrique.catalog.repository.SessionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -40,5 +43,14 @@ public class SessionService {
                 endOfDay,
                 pageable)
                 .map(sessionMapper::toDTO);
+    }
+
+    public SessionResDTO getSessionById(UUID sessionId) {
+        return sessionRepository.findById(sessionId)
+                .map(sessionMapper::toDTO)
+                .orElseThrow(() -> new NotFoundException(String.format(
+                        ExceptionsConstants.SESSION_DONT_EXISTS,
+                        sessionId
+                )));
     }
 }
