@@ -58,4 +58,16 @@ public class SeatsController {
 
         return ResponseEntity.created(uri).build();
     }
+
+    @DeleteMapping("{seatId}")
+    public ResponseEntity<Void> deleteSeat(@PathVariable String cinemaId,
+            @PathVariable String roomId,
+            @PathVariable String seatId) {
+
+        seatsService.deleteSeatFromRoom(UUID.fromString(cinemaId),
+                UUID.fromString(roomId),
+                UUID.fromString(seatId));
+
+        return ResponseEntity.noContent().build();
+    }
 }

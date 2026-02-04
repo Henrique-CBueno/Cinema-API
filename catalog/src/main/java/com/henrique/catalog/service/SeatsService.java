@@ -80,4 +80,18 @@ public class SeatsService {
         return label.toUpperCase().charAt(0) - 64;
     }
 
+    public void deleteSeatFromRoom(UUID cinemaId,
+            UUID roomId,
+            UUID seatId) {
+
+        int affectedRows = seatsRepository.softDeleteById(seatId, roomId, cinemaId);
+
+        if (affectedRows < 1)
+            throw new NotFoundException(String.format(
+                    ExceptionsConstants.SEAT_IN_ROOM_DONT_EXISTS,
+                    seatId,
+                    roomId,
+                    cinemaId));
+    }
+
 }
