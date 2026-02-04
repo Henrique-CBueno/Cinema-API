@@ -5,25 +5,19 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.SQLRestriction;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(
-        name = "seat",
-        uniqueConstraints = {
-            // Garante que não existam assentos duplicados na mesma posição física.
-            // Regra: Uma sala (room_id) não pode ter mais de um assento com a mesma fileira e número.
-                @UniqueConstraint(
-                    name = "uk_room_seat_position",
-                    columnNames = {"room_id", "row_label", "column_number"}
-                )
-        }
-)
+@Table(name = "seat")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+// Esta anotação faz com que Todos "SELECT" adicione automaticamente essa cláusula
+@SQLRestriction("active = true")
 public class SeatEntity {
 
     @Id
@@ -45,4 +39,7 @@ public class SeatEntity {
 
     @Column(nullable = false)
     private Boolean active = true;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 }
