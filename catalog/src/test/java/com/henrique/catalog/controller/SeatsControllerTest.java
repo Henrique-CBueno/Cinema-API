@@ -438,4 +438,98 @@ class SeatsControllerTest {
             RequestContextHolder.resetRequestAttributes();
         }
     }
+
+    @Nested
+    class DeleteSeat {
+
+        @Test
+        void shouldDeleteSeatWithHttpNO_CONTENT() {
+            // Arrange
+            String cinemaId = UUID.randomUUID().toString();
+            String roomId = UUID.randomUUID().toString();
+            String seatId = UUID.randomUUID().toString();
+
+            doNothing().when(seatsService).deleteSeatFromRoom(
+                    UUID.fromString(cinemaId),
+                    UUID.fromString(roomId),
+                    UUID.fromString(seatId));
+
+            // Act
+            ResponseEntity<Void> response = seatsController.deleteSeat(cinemaId, roomId, seatId);
+
+            // Assert
+            assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        }
+
+        @Test
+        void shouldPassCorrectIdsToService() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            UUID roomId = UUID.randomUUID();
+            UUID seatId = UUID.randomUUID();
+
+            ArgumentCaptor<UUID> cinemaCaptor = ArgumentCaptor.forClass(UUID.class);
+            ArgumentCaptor<UUID> roomCaptor = ArgumentCaptor.forClass(UUID.class);
+            ArgumentCaptor<UUID> seatCaptor = ArgumentCaptor.forClass(UUID.class);
+
+            doNothing().when(seatsService).deleteSeatFromRoom(
+                    cinemaCaptor.capture(),
+                    roomCaptor.capture(),
+                    seatCaptor.capture());
+
+            // Act
+            seatsController.deleteSeat(cinemaId.toString(), roomId.toString(), seatId.toString());
+
+            // Assert
+            assertEquals(cinemaId, cinemaCaptor.getValue());
+            assertEquals(roomId, roomCaptor.getValue());
+            assertEquals(seatId, seatCaptor.getValue());
+        }
+
+        @Test
+        void shouldCallServiceDeleteMethod() {
+            // Arrange
+            String cinemaId = UUID.randomUUID().toString();
+            String roomId = UUID.randomUUID().toString();
+            String seatId = UUID.randomUUID().toString();
+
+            doNothing().when(seatsService).deleteSeatFromRoom(
+                    any(UUID.class),
+                    any(UUID.class),
+                    any(UUID.class));
+
+            // Act
+            seatsController.deleteSeat(cinemaId, roomId, seatId);
+
+            // Assert
+            verify(seatsService, times(1)).deleteSeatFromRoom(
+                    any(UUID.class),
+                    any(UUID.class),
+                    any(UUID.class));
+        }
+
+        @Test
+        void shouldDeleteDifferentSeatIds() {
+            // Arrange
+            String cinemaId = UUID.randomUUID().toString();
+            String roomId = UUID.randomUUID().toString();
+            String seatId1 = UUID.randomUUID().toString();
+            String seatId2 = UUID.randomUUID().toString();
+
+            doNothing().when(seatsService).deleteSeatFromRoom(
+                    any(UUID.class),
+                    any(UUID.class),
+                    any(UUID.class));
+
+            // Act
+            seatsController.deleteSeat(cinemaId, roomId, seatId1);
+            seatsController.deleteSeat(cinemaId, roomId, seatId2);
+
+            // Assert
+            verify(seatsService, times(2)).deleteSeatFromRoom(
+                    any(UUID.class),
+                    any(UUID.class),
+                    any(UUID.class));
+        }
+    }
 }

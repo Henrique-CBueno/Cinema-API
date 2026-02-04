@@ -7,6 +7,7 @@ import com.henrique.catalog.domain.entity.SeatEntity;
 import com.henrique.catalog.domain.mapper.SeatMapper;
 import com.henrique.catalog.factory.SeatFactory;
 import com.henrique.catalog.infra.exceptions.DuplicateResourceException;
+import com.henrique.catalog.infra.exceptions.NotFoundException;
 import com.henrique.catalog.infra.exceptions.UnprocessableEntityException;
 import com.henrique.catalog.repository.SeatsRepository;
 import org.junit.jupiter.api.Nested;
@@ -416,6 +417,76 @@ class SeatsServiceTest {
                         verify(seatsRepository).saveAllAndFlush(seatsCaptor.capture());
                         List<SeatEntity> capturedSeats = seatsCaptor.getValue();
                         assertTrue(capturedSeats.stream().allMatch(seat -> seat.getRoom().equals(room)));
+                }
+        }
+
+        @Nested
+        class SafeDeleteSeat {
+
+                @Test
+                void shouldDeleteSeatSuccessfullyWhenAffectedRowsIsGreaterThanZero() {
+                        // Arrange
+                        UUID cinemaId = UUID.randomUUID();
+                        UUID roomId = UUID.randomUUID();
+                        UUID seatId = UUID.randomUUID();
+
+                        when(seatsRepository.softDeleteById(seatId, roomId, cinemaId))
+                                        .thenReturn(1);
+
+                        // Act
+                        seatsService.deleteSeatFromRoom(cinemaId, roomId, seatId);
+
+                        // Assert
+                        verify(seatsRepository, times(1)).softDeleteById(seatId, roomId, cinemaId);
+                }
+
+                @Test
+                void shouldThrowNotFoundExceptionWhenAffectedRowsIsZero() {
+                        // Arrange
+                        UUID cinemaId = UUID.randomUUID();
+                        UUID roomId = UUID.randomUUID();
+                        UUID seatId = UUID.randomUUID();
+
+                        when(seatsRepository.softDeleteById(seatId, roomId, cinemaId))
+                                        .thenReturn(0);
+
+                        // Act & Assert
+                        assertThrows(NotFoundException.class,
+                                        () -> seatsService.deleteSeatFromRoom(cinemaId, roomId, seatId));
+                        verify(seatsRepository, times(1)).softDeleteById(seatId, roomId, cinemaId);
+                }
+
+                @Test
+                void shouldIncludeSeatIdRoomIdAndCinemaIdInExceptionMessage() {
+                        // Arrange
+                        UUID cinemaId = UUID.randomUUID();
+                        UUID roomId = UUID.randomUUID();
+                        UUID seatId = UUID.randomUUID();
+
+                        when(seatsRepository.softDeleteById(seatId, roomId, cinemaId))
+                                        .thenReturn(0);
+
+                        // Act & Assert
+                        NotFoundException exception = assertThrows(NotFoundException.class,
+                                        () -> seatsService.deleteSeatFromRoom(cinemaId, roomId, seatId));
+                        assertTrue(exception.getMessage().contains(seatId.toString()));
+                        assertTrue(exception.getMessage().contains(roomId.toString()));
+                        assertTrue(exception.getMessage().contains(cinemaId.toString()));
+                }
+
+                @Test
+                void shouldThrowNotFoundExceptionWhenAffectedRowsIsNegative() {
+                        // Arrange
+                        UUID cinemaId = UUID.randomUUID();
+                        UUID roomId = UUID.randomUUID();
+                        UUID seatId = UUID.randomUUID();
+
+                        when(seatsRepository.softDeleteById(seatId, roomId, cinemaId))
+                                        .thenReturn(-1);
+
+                        // Act & Assert
+                        assertThrows(NotFoundException.class,
+                                        () -> seatsService.deleteSeatFromRoom(cinemaId, roomId, seatId));
                 }
         }
 }

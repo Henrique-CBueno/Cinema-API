@@ -349,6 +349,13 @@ Arquivo: [src/test/java/com/henrique/catalog/service/SeatsServiceTest.java](src/
 - Define `createdByUserId` em todos os assentos criados.
 - Define `room` em todos os assentos criados.
 
+### `deleteSeatFromRoom(UUID, UUID, UUID)`
+
+- Exclui assento com sucesso quando há linhas afetadas.
+- Lança `NotFoundException` quando não há linhas afetadas (affectedRows < 1).
+- Mensagem de erro contém `seatId`, `roomId` e `cinemaId`.
+- Lança `NotFoundException` quando retorno é negativo.
+
 ---
 
 ## SeatsControllerTest
@@ -373,6 +380,13 @@ Arquivo: [src/test/java/com/henrique/catalog/controller/SeatsControllerTest.java
 - Envia `cinemaId`, `roomId`, lista de assentos e `userId` corretos ao serviço.
 - Retorna `Location` preenchido.
 - Suporta criação de múltiplos assentos.
+
+### `deleteSeat(String, String, String)`
+
+- Retorna **204 NO_CONTENT**.
+- Envia `cinemaId`, `roomId` e `seatId` corretos ao serviço.
+- Chama método de exclusão do serviço.
+- Suporta exclusão de diferentes IDs de assentos.
 
 ---
 
