@@ -45,6 +45,13 @@ springdoc:
     urls:
       - name: catalog-service
         url: /catalog/v3/api-docs
+    oauth2-redirect-url: http://localhost:8080/swagger-ui/oauth2-redirect.html
+    oauth:
+      client-id: swagger
+      client-secret: kx17vvzOnTwrNs1TKPmjg9XgN0ncky08
+      appName: Swagger
+      scopes: openid, profile, email
+    use-pkce: false
   api-docs:
     path: /v3/api-docs
 
