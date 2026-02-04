@@ -20,14 +20,13 @@ spring:
               filters:
                 - TokenRelay=
 
-
   security:
     oauth2:
       client:
         registration:
           keycloak:
             client-id: gateway
-            client-secret: STxwVph40H8nyoINGW4lvAiWP8LK3YUf
+            client-secret: p0Ae5i2OIdns4KP9yWWoKznDzOXAwpJH
             scope: openid, profile, email
         provider:
           keycloak:
