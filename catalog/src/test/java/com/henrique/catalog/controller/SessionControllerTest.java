@@ -9,6 +9,7 @@ import com.henrique.catalog.domain.entity.enums.SessionStatus;
 import com.henrique.catalog.factory.MovieFactory;
 import com.henrique.catalog.factory.RoomFactory;
 import com.henrique.catalog.infra.padronize.SuccessListDataResponse;
+import com.henrique.catalog.infra.padronize.SuccessResponse;
 import com.henrique.catalog.service.SessionService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -147,6 +148,65 @@ class SessionControllerTest {
         }
     }
 
+    @Nested
+    class GetSessionById {
+
+        @Test
+        void shouldReturnHttpOK() {
+            // Arrange
+            SessionResDTO session = buildSingleSession();
+
+            doReturn(session)
+                    .when(sessionService)
+                    .getSessionById(any(UUID.class));
+
+            // Act
+            ResponseEntity<SuccessResponse> response = sessionController.getSession(session.id().toString());
+
+            // Assert
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertThat(response.getBody()).isNotNull();
+        }
+
+        @Test
+        void shouldPassCorrectParametersToService() {
+            // Arrange
+            UUID sessionId = UUID.randomUUID();
+            SessionResDTO session = buildSingleSession();
+
+            doReturn(session)
+                    .when(sessionService)
+                    .getSessionById(any(UUID.class));
+
+            // Act
+            sessionController.getSession(sessionId.toString());
+
+            // Assert
+            verify(sessionService, times(1)).getSessionById(sessionId);
+        }
+
+        @Test
+        void shouldReturnCorrectResponseBody() {
+            // Arrange
+            SessionResDTO session = buildSingleSession();
+            var expectedResponse = ResponseEntity.ok(new SuccessResponse(session));
+
+            doReturn(session)
+                    .when(sessionService)
+                    .getSessionById(any(UUID.class));
+
+            // Act
+            ResponseEntity<SuccessResponse> response = sessionController.getSession(session.id().toString());
+
+            // Assert
+            assertEquals(expectedResponse.getStatusCode(), response.getStatusCode());
+            assertThat(response)
+                    .usingRecursiveComparison()
+                    .ignoringFields("body.timestamp")
+                    .isEqualTo(expectedResponse);
+        }
+    }
+
     private Page<SessionResDTO> buildSessionPage() {
         MovieResDTO movie = MovieFactory.createMovieResponseDTO(UUID.randomUUID(), "Matrix");
         RoomsResDTO room = RoomFactory.createRoomsResponseDTO(UUID.randomUUID(), "Sala 1");
@@ -161,5 +221,19 @@ class SessionControllerTest {
                 SessionStatus.SCHEDULED);
 
         return new PageImpl<>(List.of(session));
+    }
+
+    private SessionResDTO buildSingleSession() {
+        MovieResDTO movie = MovieFactory.createMovieResponseDTO(UUID.randomUUID(), "Matrix");
+        RoomsResDTO room = RoomFactory.createRoomsResponseDTO(UUID.randomUUID(), "Sala 1");
+
+        return new SessionResDTO(
+                UUID.randomUUID(),
+                movie,
+                room,
+                LocalDateTime.of(2026, 2, 4, 14, 0),
+                LocalDateTime.of(2026, 2, 4, 16, 0),
+                new BigDecimal("30.00"),
+                SessionStatus.SCHEDULED);
     }
 }

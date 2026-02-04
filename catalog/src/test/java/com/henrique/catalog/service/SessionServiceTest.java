@@ -9,6 +9,8 @@ import com.henrique.catalog.domain.entity.enums.SessionStatus;
 import com.henrique.catalog.domain.mapper.SessionMapper;
 import com.henrique.catalog.factory.MovieFactory;
 import com.henrique.catalog.factory.RoomFactory;
+import com.henrique.catalog.infra.constants.ExceptionsConstants;
+import com.henrique.catalog.infra.exceptions.NotFoundException;
 import com.henrique.catalog.repository.SessionRepository;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -27,6 +29,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -169,6 +172,61 @@ class SessionServiceTest {
 
             assertNull(startCaptor.getValue());
             assertNull(endCaptor.getValue());
+        }
+    }
+
+    @Nested
+    class GetSessionById {
+
+        @Test
+        void shouldReturnSessionWhenExists() {
+            // Arrange
+            UUID sessionId = UUID.randomUUID();
+
+            MovieEntity movieEntity = MovieFactory.createMovieEntity();
+            RoomEntity roomEntity = RoomFactory.createRoomEntity();
+
+            SessionEntity sessionEntity = buildSession(sessionId, movieEntity, roomEntity,
+                    LocalDateTime.of(2026, 2, 4, 14, 0),
+                    LocalDateTime.of(2026, 2, 4, 16, 0),
+                    new BigDecimal("30.00"),
+                    SessionStatus.SCHEDULED);
+
+            SessionResDTO dto = new SessionResDTO(sessionId, null, null,
+                    sessionEntity.getStartTime(), sessionEntity.getEndTime(),
+                    sessionEntity.getPrice(), sessionEntity.getStatus());
+
+            when(sessionRepository.findById(sessionId))
+                    .thenReturn(Optional.of(sessionEntity));
+            when(sessionMapper.toDTO(sessionEntity))
+                    .thenReturn(dto);
+
+            // Act
+            SessionResDTO result = sessionService.getSessionById(sessionId);
+
+            // Assert
+            assertNotNull(result);
+            assertEquals(dto, result);
+            verify(sessionRepository, times(1)).findById(sessionId);
+            verify(sessionMapper, times(1)).toDTO(sessionEntity);
+        }
+
+        @Test
+        void shouldThrowNotFoundExceptionWhenSessionDoesNotExist() {
+            // Arrange
+            UUID sessionId = UUID.randomUUID();
+
+            when(sessionRepository.findById(sessionId))
+                    .thenReturn(Optional.empty());
+
+            // Act & Assert
+            NotFoundException exception = assertThrows(NotFoundException.class,
+                    () -> sessionService.getSessionById(sessionId));
+
+            assertEquals(String.format(ExceptionsConstants.SESSION_DONT_EXISTS, sessionId),
+                    exception.getMessage());
+            verify(sessionRepository, times(1)).findById(sessionId);
+            verify(sessionMapper, never()).toDTO(any());
         }
     }
 
