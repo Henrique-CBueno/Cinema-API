@@ -37,6 +37,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/catalog/cinemas/{id}/rooms/{roomId}").hasRole("GATEWAY_ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/catalog/cinemas/{id}/rooms/{roomId}").hasRole("GATEWAY_ADMIN")
 
+                        .requestMatchers(HttpMethod.POST, "/catalog/cinemas/{id}/rooms/{roomId}/seats").hasRole("GATEWAY_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/catalog/cinemas/{id}/rooms/{roomId}/seats/{seatId}").hasRole("GATEWAY_ADMIN")
+
                         .requestMatchers("/hello/**").hasRole("GATEWAY_ADMIN")
                         .requestMatchers("/catalog/**").permitAll()
                         
