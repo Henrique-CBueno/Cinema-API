@@ -14,5 +14,5 @@ public record SessionResDTO(UUID id,
                             LocalDateTime startTime,
                             LocalDateTime endTime,
                             BigDecimal price,
-                            SessionStatus sessionStatus) {
+                            SessionStatus status) {
 }
