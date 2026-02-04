@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -55,5 +56,14 @@ public class GlobalExceptionHandler {
                                 .body(new ErrorGlobalResponse(
                                                 unprocessableContent.name(),
                                                 ex.getMessage()));
+        }
+
+        @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+        public ResponseEntity<ErrorGlobalResponse> handleTypeMismatch() {
+
+                HttpStatus badRequest = HttpStatus.BAD_REQUEST;
+                return ResponseEntity
+                        .status(badRequest)
+                        .body(new ErrorGlobalResponse(badRequest.name(), "BODY NAO COMPATIVEL"));
         }
 }
