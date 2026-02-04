@@ -3,6 +3,7 @@ DROP INDEX IF EXISTS uk_movie_title_active;
 DROP INDEX IF EXISTS uk_room_active_name;
 DROP INDEX IF EXISTS uk_cinema_name_city;
 DROP INDEX IF EXISTS uk_room_seat_position;
+DROP INDEX IF EXISTS uk_room_start_time;
 
 -- Cria o índice parcial que permite nomes repetidos APENAS se active=false
 CREATE UNIQUE INDEX uk_movie_title_active
@@ -20,3 +21,7 @@ CREATE UNIQUE INDEX uk_cinema_name_city
 CREATE UNIQUE INDEX uk_room_seat_position
     ON seat (room_id, row_label, column_number)
     WHERE active = true;
+
+CREATE UNIQUE INDEX uk_room_start_time
+    ON session (room_id, start_time)
+    WHERE active = true AND status = 'SCHEDULED'

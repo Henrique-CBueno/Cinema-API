@@ -2,20 +2,25 @@ package com.henrique.catalog.domain.entity;
 
 import com.henrique.catalog.domain.entity.enums.SessionStatus;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "session",
-        // Impede o conflito de agendamento: uma sala não pode ter duas sessões iniciando no mesmo horário.
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uk_room_start_time",
-                        columnNames = {"room_id", "start_time"}
-                )
-        })
+@Table(name = "session")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+// Esta anotação faz com que Todos "SELECT" adicione automaticamente essa
+// cláusula
+@SQLRestriction("active = true")
 public class SessionEntity {
 
     @Id
@@ -45,4 +50,10 @@ public class SessionEntity {
 
     @Column(nullable = false, updatable = false)
     private UUID createdByUserId;
+
+    @Column(nullable = false)
+    private Boolean active = true;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 }
