@@ -12,5 +12,10 @@ public interface SeatMapper {
     @Mapping(source = "room.id", target = "roomId")
     SeatResDTO toDTO(SeatEntity seatEntity);
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "room", ignore = true)
+    @Mapping(target = "createdByUserId", ignore = true)
+    @Mapping(target = "active", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
     SeatEntity toEntity(CreateSeatReqDTO createSeatReqDTO);
 }
