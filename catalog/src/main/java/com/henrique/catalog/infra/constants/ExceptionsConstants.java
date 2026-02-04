@@ -7,4 +7,6 @@ public class ExceptionsConstants {
     public static String ROOM_IN_CINEMA_DONT_EXISTS = "Não existe uma sala com id %s no cinema com id %s";
     public static String DUPLICATE_RESOURCE = "Ja existe um dado com esse valor no campo %s";
     public static String DUPLICATE_RESOURCE_ROOM = "Ja existe uma sala com o nome %s nesse cinema";
+    public static String DUPLICATE_SEAT_POSITION = "Já existe um assento ativo na com fileira e numero igual para esta sala.";
+    public static String IMPOSSIBLE_SEAT_POSITION = "Esse assento é impossivel nessa sala";
 }

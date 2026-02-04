@@ -116,4 +116,17 @@ public class RoomsService {
                 cinemaId
         ));
     }
+
+    public RoomEntity getRoomByCinemaIdAndRoomIdReturningEntity(UUID cinemaId,
+                                                                UUID roomId) {
+
+        return roomsRepository.findByCinemaIdAndId(cinemaId, roomId)
+                .orElseThrow(
+                        () -> new NotFoundException(String.format(
+                                ExceptionsConstants.ROOM_IN_CINEMA_DONT_EXISTS,
+                                roomId,
+                                cinemaId
+                        ))
+                );
+    }
 }
