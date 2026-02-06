@@ -1,10 +1,13 @@
 package com.henrique.catalog.repository;
 
 import com.henrique.catalog.domain.entity.SessionEntity;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -29,4 +32,12 @@ public interface SessionRepository extends JpaRepository<SessionEntity, UUID> {
                                                 LocalDateTime startOfDay,
                                                 LocalDateTime endOfDay,
                                                 Pageable pageable);
+
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE SessionEntity s SET s.active = false WHERE s.id = :sessionId AND s.room.id = :roomId AND s.room.cinema.id = :cinemaId")
+    int softDeleteById(@Param("sessionId") UUID sessionId,
+                       @Param("roomId") UUID roomId,
+                       @Param("cinemaId") UUID cinemaId);
 }

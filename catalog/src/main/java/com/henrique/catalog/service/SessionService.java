@@ -81,4 +81,17 @@ public class SessionService {
             throw new DuplicateResourceException(ExceptionsConstants.SESSION_IN_THIS_TIME);
         }
     }
+
+    public void deleteSeatFromSession(UUID cinemaId,
+                                   UUID roomId,
+                                   UUID sessionId) {
+
+        int affectedRows = sessionRepository.softDeleteById(sessionId, roomId, cinemaId);
+
+        if (affectedRows < 1)
+            throw new NotFoundException(String.format(
+                    ExceptionsConstants.SESSION_DONT_EXISTS,
+                    sessionId
+            ));
+    }
 }

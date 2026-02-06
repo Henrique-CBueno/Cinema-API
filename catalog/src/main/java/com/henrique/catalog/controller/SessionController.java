@@ -63,4 +63,16 @@ public class SessionController {
 
         return ResponseEntity.created(uri).build();
     }
+
+    @DeleteMapping("{cinemaId}/{roomId}/{sessionId}")
+    public ResponseEntity<Void> deleteSeat(@PathVariable String cinemaId,
+                                           @PathVariable String roomId,
+                                           @PathVariable String sessionId) {
+
+        sessionService.deleteSeatFromSession(UUID.fromString(cinemaId),
+                UUID.fromString(roomId),
+                UUID.fromString(sessionId));
+
+        return ResponseEntity.noContent().build();
+    }
 }
