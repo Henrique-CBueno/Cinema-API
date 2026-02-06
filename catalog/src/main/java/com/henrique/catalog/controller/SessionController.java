@@ -1,19 +1,20 @@
 package com.henrique.catalog.controller;
 
 import com.henrique.catalog.domain.dto.global.PaginationParams;
+import com.henrique.catalog.domain.dto.req.sessions.CreateSessionReqDTO;
 import com.henrique.catalog.domain.dto.req.sessions.GetAllSessionParamsDTO;
 import com.henrique.catalog.domain.dto.res.session.SessionResDTO;
 import com.henrique.catalog.infra.padronize.SuccessListDataResponse;
 import com.henrique.catalog.infra.padronize.SuccessResponse;
 import com.henrique.catalog.service.SessionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.UUID;
 
 @RestController
@@ -45,5 +46,21 @@ public class SessionController {
         SessionResDTO session = sessionService.getSessionById(UUID.fromString(sessionId));
 
         return ResponseEntity.ok(new SuccessResponse(session));
+    }
+
+    @PostMapping
+    public ResponseEntity<Void> createSession(@RequestHeader(value = "X-User-Id", required = false) String userId,
+                                              @RequestBody @Valid CreateSessionReqDTO dto) {
+
+        UUID createdSessionId = sessionService.createNewSession(dto,
+                UUID.fromString(userId));
+
+        URI uri = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(createdSessionId)
+                .toUri();
+
+        return ResponseEntity.created(uri).build();
     }
 }
