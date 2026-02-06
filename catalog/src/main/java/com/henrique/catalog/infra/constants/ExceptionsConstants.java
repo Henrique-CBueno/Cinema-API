@@ -11,4 +11,5 @@ public class ExceptionsConstants {
     public static String DUPLICATE_RESOURCE_ROOM = "Ja existe uma sala com o nome %s nesse cinema";
     public static String DUPLICATE_SEAT_POSITION = "Já existe um assento ativo na com fileira e numero igual para esta sala.";
     public static String IMPOSSIBLE_SEAT_POSITION = "Esse assento é impossivel nessa sala";
+    public static String SESSION_IN_THIS_TIME = "Essa sessão é impossivel nesse horário para essa sala, ja existe uma sessão nesse horário para essa sala.";
 }

@@ -45,6 +45,13 @@ public class MovieService {
                 ));
     }
 
+    public MovieEntity getMovieByIdReturningEntity(UUID id) {
+        return movieRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(
+                        String.format(ExceptionsConstants.MOVIE_DONT_EXISTS, id)
+                ));
+    }
+
     @Transactional
     public UUID createMovie(CreateMovieReqDTO dto, String userId) {
         try {
