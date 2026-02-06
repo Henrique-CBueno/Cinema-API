@@ -450,6 +450,12 @@ Arquivo: [src/test/java/com/henrique/catalog/service/SessionServiceTest.java](sr
 - Busca filme e sala com os IDs informados.
 - Lança `DuplicateResourceException` quando há conflito de horário.
 
+### `deleteSeatFromSession(UUID, UUID, UUID)`
+
+- Exclui sessão com sucesso quando há linhas afetadas.
+- Lança `NotFoundException` quando não há linhas afetadas (affectedRows < 1).
+- Mensagem de erro contém o `sessionId` solicitado.
+
 ---
 
 ## SessionControllerTest
@@ -474,6 +480,13 @@ Arquivo: [src/test/java/com/henrique/catalog/controller/SessionControllerTest.ja
 - Retorna **201 CREATED**.
 - Envia `userId` e `dto` corretos ao serviço.
 - Retorna `Location` preenchido.
+
+### `deleteSeat(String, String, String)`
+
+- Retorna **204 NO_CONTENT**.
+- Envia `cinemaId`, `roomId` e `sessionId` corretos ao serviço.
+- Chama método de exclusão do serviço.
+- Suporta exclusão de diferentes IDs de sessão.
 
 ---
 

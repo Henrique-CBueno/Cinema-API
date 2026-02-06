@@ -37,6 +37,7 @@ import java.util.UUID;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -275,6 +276,87 @@ class SessionControllerTest {
 
                         // Cleanup
                         RequestContextHolder.resetRequestAttributes();
+                }
+        }
+
+        @Nested
+        class DeleteSession {
+
+                @Test
+                void shouldDeleteSessionWithHttpNoContent() {
+                        // Arrange
+                        UUID cinemaId = UUID.randomUUID();
+                        UUID roomId = UUID.randomUUID();
+                        UUID sessionId = UUID.randomUUID();
+
+                            doNothing()
+                                    .when(sessionService)
+                                    .deleteSeatFromSession(cinemaId, roomId, sessionId);
+
+                        // Act
+                        ResponseEntity<Void> response = sessionController.deleteSeat(
+                                        cinemaId.toString(),
+                                        roomId.toString(),
+                                        sessionId.toString());
+
+                        // Assert
+                        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+                }
+
+                @Test
+                void shouldPassCorrectParametersToService() {
+                        // Arrange
+                        UUID cinemaId = UUID.randomUUID();
+                        UUID roomId = UUID.randomUUID();
+                        UUID sessionId = UUID.randomUUID();
+
+                            doNothing()
+                                    .when(sessionService)
+                                    .deleteSeatFromSession(any(UUID.class), any(UUID.class), any(UUID.class));
+
+                        // Act
+                        sessionController.deleteSeat(cinemaId.toString(), roomId.toString(), sessionId.toString());
+
+                        // Assert
+                        verify(sessionService, times(1)).deleteSeatFromSession(cinemaId, roomId, sessionId);
+                }
+
+                @Test
+                void shouldCallServiceDeleteMethod() {
+                        // Arrange
+                        UUID cinemaId = UUID.randomUUID();
+                        UUID roomId = UUID.randomUUID();
+                        UUID sessionId = UUID.randomUUID();
+
+                            doNothing()
+                                    .when(sessionService)
+                                    .deleteSeatFromSession(any(UUID.class), any(UUID.class), any(UUID.class));
+
+                        // Act
+                        sessionController.deleteSeat(cinemaId.toString(), roomId.toString(), sessionId.toString());
+
+                        // Assert
+                        verify(sessionService, times(1)).deleteSeatFromSession(any(UUID.class), any(UUID.class), any(UUID.class));
+                }
+
+                @Test
+                void shouldDeleteDifferentSessionIds() {
+                        // Arrange
+                        UUID cinemaId = UUID.randomUUID();
+                        UUID roomId = UUID.randomUUID();
+                        UUID sessionId1 = UUID.randomUUID();
+                        UUID sessionId2 = UUID.randomUUID();
+
+                            doNothing()
+                                    .when(sessionService)
+                                    .deleteSeatFromSession(any(UUID.class), any(UUID.class), any(UUID.class));
+
+                        // Act
+                        sessionController.deleteSeat(cinemaId.toString(), roomId.toString(), sessionId1.toString());
+                        sessionController.deleteSeat(cinemaId.toString(), roomId.toString(), sessionId2.toString());
+
+                        // Assert
+                        verify(sessionService, times(2)).deleteSeatFromSession(any(UUID.class), any(UUID.class), any(UUID.class));
                 }
         }
 

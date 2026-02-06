@@ -326,6 +326,74 @@ class SessionServiceTest {
         }
     }
 
+    @Nested
+    class SafeDeleteSession {
+
+        @Test
+        void shouldDeleteSessionSuccessfullyWhenAffectedRowsIsGreaterThanZero() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            UUID roomId = UUID.randomUUID();
+            UUID sessionId = UUID.randomUUID();
+
+            when(sessionRepository.softDeleteById(sessionId, roomId, cinemaId))
+                    .thenReturn(1);
+
+            // Act
+            sessionService.deleteSeatFromSession(cinemaId, roomId, sessionId);
+
+            // Assert
+            verify(sessionRepository, times(1)).softDeleteById(sessionId, roomId, cinemaId);
+        }
+
+        @Test
+        void shouldThrowNotFoundExceptionWhenAffectedRowsIsZero() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            UUID roomId = UUID.randomUUID();
+            UUID sessionId = UUID.randomUUID();
+
+            when(sessionRepository.softDeleteById(sessionId, roomId, cinemaId))
+                    .thenReturn(0);
+
+            // Act & Assert
+            assertThrows(NotFoundException.class,
+                    () -> sessionService.deleteSeatFromSession(cinemaId, roomId, sessionId));
+            verify(sessionRepository, times(1)).softDeleteById(sessionId, roomId, cinemaId);
+        }
+
+        @Test
+        void shouldIncludeSessionIdInExceptionMessage() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            UUID roomId = UUID.randomUUID();
+            UUID sessionId = UUID.randomUUID();
+
+            when(sessionRepository.softDeleteById(sessionId, roomId, cinemaId))
+                    .thenReturn(0);
+
+            // Act & Assert
+            NotFoundException exception = assertThrows(NotFoundException.class,
+                    () -> sessionService.deleteSeatFromSession(cinemaId, roomId, sessionId));
+            assertTrue(exception.getMessage().contains(sessionId.toString()));
+        }
+
+        @Test
+        void shouldThrowNotFoundExceptionWhenAffectedRowsIsNegative() {
+            // Arrange
+            UUID cinemaId = UUID.randomUUID();
+            UUID roomId = UUID.randomUUID();
+            UUID sessionId = UUID.randomUUID();
+
+            when(sessionRepository.softDeleteById(sessionId, roomId, cinemaId))
+                    .thenReturn(-1);
+
+            // Act & Assert
+            assertThrows(NotFoundException.class,
+                    () -> sessionService.deleteSeatFromSession(cinemaId, roomId, sessionId));
+        }
+    }
+
     private SessionEntity buildSession(UUID id,
             MovieEntity movie,
             RoomEntity room,
