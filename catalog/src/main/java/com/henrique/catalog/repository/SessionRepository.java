@@ -19,7 +19,7 @@ public interface SessionRepository extends JpaRepository<SessionEntity, UUID> {
         WHERE (:movieId IS NULL OR s.movie.id = :movieId)
         AND (:cinemaId IS NULL OR s.room.cinema.id = :cinemaId)
         AND (:roomId IS NULL OR s.room.id = :roomId)
-        AND (cast(:date as date) IS NULL OR
+        AND (:date IS NULL OR
         (s.startTime >= :startOfDay AND s.startTime <= :endOfDay))
     """)
     Page<SessionEntity> findSessionsWithFilters(UUID movieId,
