@@ -41,6 +41,11 @@ Arquivo: [src/test/java/com/henrique/catalog/service/MovieServiceTest.java](src/
 - Lança `NotFoundException` quando não existe.
 - Mensagem de erro contém o `id` solicitado.
 
+### `getMovieByIdReturningEntity(UUID)`
+
+- Retorna `MovieEntity` quando o filme existe.
+- Lança `NotFoundException` quando não existe.
+
 ### `createMovie(CreateMovieReqDTO, String)`
 
 - Cria filme com sucesso e retorna `UUID`.
@@ -439,6 +444,12 @@ Arquivo: [src/test/java/com/henrique/catalog/service/SessionServiceTest.java](sr
 - Mensagem de erro contém o `id` solicitado.
 - Chama o repositório com o `id` correto.
 
+### `createNewSession(CreateSessionReqDTO, UUID)`
+
+- Cria sessão com sucesso e retorna `UUID`.
+- Busca filme e sala com os IDs informados.
+- Lança `DuplicateResourceException` quando há conflito de horário.
+
 ---
 
 ## SessionControllerTest
@@ -458,6 +469,12 @@ Arquivo: [src/test/java/com/henrique/catalog/controller/SessionControllerTest.ja
 - Envia `sessionId` correto ao serviço.
 - Retorna corpo correto (comparação ignorando `timestamp`).
 
+### `createSession(String, CreateSessionReqDTO)`
+
+- Retorna **201 CREATED**.
+- Envia `userId` e `dto` corretos ao serviço.
+- Retorna `Location` preenchido.
+
 ---
 
 ## SessionMapperTest
@@ -469,6 +486,13 @@ Arquivo: [src/test/java/com/henrique/catalog/domain/mapper/SessionMapperTest.jav
 - Mapeia todos os campos da entidade para o DTO (`id`, `movie`, `room`, `startTime`, `endTime`, `price`, `sessionStatus`).
 - Retorna `null` quando a entidade é `null`.
 - Mapeia diferentes `SessionStatus` corretamente.
+
+### `toEntity(CreateSessionReqDTO, MovieEntity, RoomEntity, UUID)`
+
+- Mapeia campos básicos do DTO para a entidade.
+- Calcula `endTime` usando a duração do filme.
+- Define `status` como `SCHEDULED`.
+- Define `createdByUserId` com o usuário informado.
 
 ---
 

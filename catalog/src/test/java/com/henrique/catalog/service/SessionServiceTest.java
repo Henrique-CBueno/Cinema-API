@@ -10,6 +10,7 @@ import com.henrique.catalog.domain.mapper.SessionMapper;
 import com.henrique.catalog.factory.MovieFactory;
 import com.henrique.catalog.factory.RoomFactory;
 import com.henrique.catalog.infra.constants.ExceptionsConstants;
+import com.henrique.catalog.infra.exceptions.DuplicateResourceException;
 import com.henrique.catalog.infra.exceptions.NotFoundException;
 import com.henrique.catalog.repository.SessionRepository;
 import org.junit.jupiter.api.Nested;
@@ -19,6 +20,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -44,6 +46,12 @@ class SessionServiceTest {
 
     @Mock
     private SessionMapper sessionMapper;
+
+        @Mock
+        private MovieService movieService;
+
+        @Mock
+        private RoomsService roomsService;
 
     @InjectMocks
     private SessionService sessionService;
@@ -227,6 +235,94 @@ class SessionServiceTest {
                     exception.getMessage());
             verify(sessionRepository, times(1)).findById(sessionId);
             verify(sessionMapper, never()).toDTO(any());
+        }
+    }
+
+    @Nested
+    class CreateNewSession {
+
+        @Test
+        void shouldCreateSessionSuccessfully() {
+            // Arrange
+            UUID userId = UUID.randomUUID();
+            UUID movieId = UUID.randomUUID();
+            UUID cinemaId = UUID.randomUUID();
+            UUID roomId = UUID.randomUUID();
+            LocalDateTime startTime = LocalDateTime.of(2026, 2, 4, 14, 0);
+
+            MovieEntity movieEntity = MovieFactory.createMovieEntity(movieId, "Matrix");
+            movieEntity.setDurationMinutes(120);
+            RoomEntity roomEntity = RoomFactory.createRoomEntity(roomId, "Sala 1");
+
+            var dto = new com.henrique.catalog.domain.dto.req.sessions.CreateSessionReqDTO(
+                    movieId,
+                    roomId,
+                    cinemaId,
+                    startTime,
+                    new BigDecimal("30.00")
+            );
+
+            SessionEntity sessionEntity = new SessionEntity();
+            UUID createdId = UUID.randomUUID();
+            sessionEntity.setId(createdId);
+
+            when(movieService.getMovieByIdReturningEntity(movieId))
+                    .thenReturn(movieEntity);
+            when(roomsService.getRoomByCinemaIdAndRoomIdReturningEntity(cinemaId, roomId))
+                    .thenReturn(roomEntity);
+            when(sessionMapper.toEntity(dto, movieEntity, roomEntity, userId))
+                    .thenReturn(sessionEntity);
+            when(sessionRepository.saveAndFlush(sessionEntity))
+                    .thenReturn(sessionEntity);
+
+            // Act
+            UUID result = sessionService.createNewSession(dto, userId);
+
+            // Assert
+            assertNotNull(result);
+            assertEquals(createdId, result);
+            verify(movieService, times(1)).getMovieByIdReturningEntity(movieId);
+            verify(roomsService, times(1)).getRoomByCinemaIdAndRoomIdReturningEntity(cinemaId, roomId);
+            verify(sessionMapper, times(1)).toEntity(dto, movieEntity, roomEntity, userId);
+            verify(sessionRepository, times(1)).saveAndFlush(sessionEntity);
+        }
+
+        @Test
+        void shouldThrowDuplicateResourceExceptionWhenSessionTimeConflicts() {
+            // Arrange
+            UUID userId = UUID.randomUUID();
+            UUID movieId = UUID.randomUUID();
+            UUID cinemaId = UUID.randomUUID();
+            UUID roomId = UUID.randomUUID();
+
+            MovieEntity movieEntity = MovieFactory.createMovieEntity(movieId, "Matrix");
+            RoomEntity roomEntity = RoomFactory.createRoomEntity(roomId, "Sala 1");
+
+            var dto = new com.henrique.catalog.domain.dto.req.sessions.CreateSessionReqDTO(
+                    movieId,
+                    roomId,
+                    cinemaId,
+                    LocalDateTime.of(2026, 2, 4, 14, 0),
+                    new BigDecimal("30.00")
+            );
+
+            SessionEntity sessionEntity = new SessionEntity();
+
+            when(movieService.getMovieByIdReturningEntity(movieId))
+                    .thenReturn(movieEntity);
+            when(roomsService.getRoomByCinemaIdAndRoomIdReturningEntity(cinemaId, roomId))
+                    .thenReturn(roomEntity);
+            when(sessionMapper.toEntity(dto, movieEntity, roomEntity, userId))
+                    .thenReturn(sessionEntity);
+            when(sessionRepository.saveAndFlush(sessionEntity))
+                    .thenThrow(new DataIntegrityViolationException("Duplicate"));
+
+            // Act & Assert
+            DuplicateResourceException exception = assertThrows(DuplicateResourceException.class,
+                    () -> sessionService.createNewSession(dto, userId));
+
+            assertEquals(ExceptionsConstants.SESSION_IN_THIS_TIME, exception.getMessage());
+            verify(sessionRepository, times(1)).saveAndFlush(sessionEntity);
         }
     }
 

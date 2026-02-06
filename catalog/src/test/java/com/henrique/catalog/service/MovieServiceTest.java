@@ -174,6 +174,43 @@ class MovieServiceTest {
     }
 
     @Nested
+    class GetMovieByIdReturningEntity {
+
+        @Test
+        void shouldReturnMovieEntityWhenMovieExists() {
+            // Arrange
+            UUID movieId = UUID.randomUUID();
+            MovieEntity entity = MovieFactory.createMovieEntity(movieId, "Test Movie");
+
+            when(movieRepository.findById(movieId))
+                    .thenReturn(Optional.of(entity));
+
+            // Act
+            MovieEntity result = movieService.getMovieByIdReturningEntity(movieId);
+
+            // Assert
+            assertNotNull(result);
+            assertEquals(movieId, result.getId());
+            verify(movieRepository, times(1)).findById(movieId);
+        }
+
+        @Test
+        void shouldThrowNotFoundExceptionWhenMovieDoesNotExist() {
+            // Arrange
+            UUID movieId = UUID.randomUUID();
+
+            when(movieRepository.findById(movieId))
+                    .thenReturn(Optional.empty());
+
+            // Act & Assert
+            assertThrows(NotFoundException.class, () -> {
+                movieService.getMovieByIdReturningEntity(movieId);
+            });
+            verify(movieRepository, times(1)).findById(movieId);
+        }
+    }
+
+    @Nested
     class CreateMovie {
 
         @Test

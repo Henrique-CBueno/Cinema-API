@@ -1,6 +1,7 @@
 package com.henrique.catalog.controller;
 
 import com.henrique.catalog.domain.dto.global.PaginationParams;
+import com.henrique.catalog.domain.dto.req.sessions.CreateSessionReqDTO;
 import com.henrique.catalog.domain.dto.req.sessions.GetAllSessionParamsDTO;
 import com.henrique.catalog.domain.dto.res.movie.MovieResDTO;
 import com.henrique.catalog.domain.dto.res.rooms.RoomsResDTO;
@@ -23,6 +24,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -206,6 +210,73 @@ class SessionControllerTest {
                     .isEqualTo(expectedResponse);
         }
     }
+
+        @Nested
+        class CreateSession {
+
+                @Test
+                void shouldReturnHttpCreated() {
+                        // Arrange
+                        MockHttpServletRequest request = new MockHttpServletRequest();
+                        request.setRequestURI("/sessions");
+                        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+                        UUID createdId = UUID.randomUUID();
+                        CreateSessionReqDTO dto = new CreateSessionReqDTO(
+                                        UUID.randomUUID(),
+                                        UUID.randomUUID(),
+                                        UUID.randomUUID(),
+                                        LocalDateTime.of(2026, 2, 4, 14, 0),
+                                        new BigDecimal("30.00")
+                        );
+                        String userId = UUID.randomUUID().toString();
+
+                        doReturn(createdId)
+                                        .when(sessionService)
+                                        .createNewSession(dto, UUID.fromString(userId));
+
+                        // Act
+                        ResponseEntity<Void> response = sessionController.createSession(userId, dto);
+
+                        // Assert
+                        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+                        assertThat(response.getHeaders().getLocation()).isNotNull();
+
+                        // Cleanup
+                        RequestContextHolder.resetRequestAttributes();
+                }
+
+                @Test
+                void shouldPassCorrectParametersToService() {
+                        // Arrange
+                        MockHttpServletRequest request = new MockHttpServletRequest();
+                        request.setRequestURI("/sessions");
+                        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+                        UUID createdId = UUID.randomUUID();
+                        UUID userId = UUID.randomUUID();
+                        CreateSessionReqDTO dto = new CreateSessionReqDTO(
+                                        UUID.randomUUID(),
+                                        UUID.randomUUID(),
+                                        UUID.randomUUID(),
+                                        LocalDateTime.of(2026, 2, 4, 14, 0),
+                                        new BigDecimal("30.00")
+                        );
+
+                        doReturn(createdId)
+                                        .when(sessionService)
+                                        .createNewSession(any(CreateSessionReqDTO.class), any(UUID.class));
+
+                        // Act
+                        sessionController.createSession(userId.toString(), dto);
+
+                        // Assert
+                        verify(sessionService, times(1)).createNewSession(dto, userId);
+
+                        // Cleanup
+                        RequestContextHolder.resetRequestAttributes();
+                }
+        }
 
     private Page<SessionResDTO> buildSessionPage() {
         MovieResDTO movie = MovieFactory.createMovieResponseDTO(UUID.randomUUID(), "Matrix");

@@ -3,6 +3,7 @@ package com.henrique.catalog.domain.mapper;
 import com.henrique.catalog.domain.dto.res.movie.MovieResDTO;
 import com.henrique.catalog.domain.dto.res.rooms.RoomsResDTO;
 import com.henrique.catalog.domain.dto.res.session.SessionResDTO;
+import com.henrique.catalog.domain.dto.req.sessions.CreateSessionReqDTO;
 import com.henrique.catalog.domain.entity.MovieEntity;
 import com.henrique.catalog.domain.entity.RoomEntity;
 import com.henrique.catalog.domain.entity.SessionEntity;
@@ -124,6 +125,47 @@ class SessionMapperTest {
             // Assert
             assertNotNull(response);
             assertEquals(SessionStatus.FINISHED, response.status());
+        }
+    }
+
+    @Nested
+    class ToEntity {
+
+        @Test
+        void shouldMapCreateRequestToEntityWithCalculatedFields() {
+            // Arrange
+            UUID movieId = UUID.randomUUID();
+            UUID roomId = UUID.randomUUID();
+            UUID cinemaId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
+            LocalDateTime startTime = LocalDateTime.of(2026, 2, 4, 14, 0);
+            BigDecimal price = new BigDecimal("30.00");
+
+            MovieEntity movie = MovieFactory.createMovieEntity(movieId, "Matrix");
+            movie.setDurationMinutes(120);
+            RoomEntity room = RoomFactory.createRoomEntity(roomId, "Sala 1");
+
+            CreateSessionReqDTO dto = new CreateSessionReqDTO(
+                    movieId,
+                    roomId,
+                    cinemaId,
+                    startTime,
+                    price
+            );
+
+            // Act
+            SessionEntity entity = sessionMapper.toEntity(dto, movie, room, userId);
+
+            // Assert
+            assertNotNull(entity);
+            assertNull(entity.getId());
+            assertEquals(movie, entity.getMovie());
+            assertEquals(room, entity.getRoom());
+            assertEquals(startTime, entity.getStartTime());
+            assertEquals(startTime.plusMinutes(movie.getDurationMinutes()), entity.getEndTime());
+            assertEquals(price, entity.getPrice());
+            assertEquals(SessionStatus.SCHEDULED, entity.getStatus());
+            assertEquals(userId, entity.getCreatedByUserId());
         }
     }
 }
