@@ -10,9 +10,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "reserve", uniqueConstraints = {
-        @UniqueConstraint(name = "uk_session_id_seat_id", columnNames = { "session_id", "seat_id" })
-})
+@Table(name = "reserve")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -31,6 +29,7 @@ public class Reservation {
     @Column(name = "seat_id", nullable = false)
     UUID seatId;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     ReserveState status;
 
