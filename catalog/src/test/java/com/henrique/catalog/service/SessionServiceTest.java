@@ -83,8 +83,10 @@ class SessionServiceTest {
             Page<SessionEntity> entityPage = new PageImpl<>(List.of(session1, session2));
 
             SessionResDTO dto1 = new SessionResDTO(session1.getId(), null, null,
+                    roomEntity.getCinema().getId(),
                     session1.getStartTime(), session1.getEndTime(), session1.getPrice(), session1.getStatus());
             SessionResDTO dto2 = new SessionResDTO(session2.getId(), null, null,
+                    roomEntity.getCinema().getId(),
                     session2.getStartTime(), session2.getEndTime(), session2.getPrice(), session2.getStatus());
 
             when(sessionRepository.findSessionsWithFilters(any(), any(), any(), any(), any(), any(), any()))
@@ -201,6 +203,7 @@ class SessionServiceTest {
                     SessionStatus.SCHEDULED);
 
             SessionResDTO dto = new SessionResDTO(sessionId, null, null,
+                    roomEntity.getCinema().getId(),
                     sessionEntity.getStartTime(), sessionEntity.getEndTime(),
                     sessionEntity.getPrice(), sessionEntity.getStatus());
 

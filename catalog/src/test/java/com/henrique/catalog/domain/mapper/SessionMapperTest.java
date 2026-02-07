@@ -80,6 +80,7 @@ class SessionMapperTest {
             assertEquals(sessionId, response.id());
             assertEquals(movieResDTO, response.movie());
             assertEquals(roomsResDTO, response.room());
+            assertEquals(roomEntity.getCinema().getId(), response.cinemaId());
             assertEquals(startTime, response.startTime());
             assertEquals(endTime, response.endTime());
             assertEquals(price, response.price());
