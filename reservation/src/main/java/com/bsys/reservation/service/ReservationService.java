@@ -92,6 +92,21 @@ public class ReservationService {
         }
     }
 
+    @Transactional
+    public boolean expirePendingReservation(UUID sessionId, UUID seatId) {
+        int updated = reservationRepository.updateReservationStatus(
+                sessionId,
+                seatId,
+                ReserveState.PENDING_PAYMENT,
+                ReserveState.EXPIRED);
+        return updated > 0;
+    }
+
+
+
+
+
+
     private List<Reservation> buildPendingReservations(CreateReservationDTO dto,
             List<UUID> seatIds,
             String userId) {
@@ -121,13 +136,4 @@ public class ReservationService {
         }
     }
 
-    @Transactional
-    public boolean expirePendingReservation(UUID sessionId, UUID seatId) {
-        int updated = reservationRepository.updateReservationStatus(
-                sessionId,
-                seatId,
-                ReserveState.PENDING_PAYMENT,
-                ReserveState.EXPIRED);
-        return updated > 0;
-    }
 }
