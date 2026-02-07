@@ -12,6 +12,7 @@ import com.bsys.reservation.infra.exceptions.SessionUnavailableException;
 import com.bsys.reservation.infra.exceptions.SeatDontExistsException;
 import com.bsys.reservation.infra.exceptions.SeatUnavailableException;
 import com.bsys.reservation.infra.exceptions.ReservationPersistenceException;
+import com.bsys.reservation.infra.exceptions.SeatAlreadyReservedException;
 import com.bsys.reservation.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,12 +56,17 @@ public class ReservationService {
                 session.room().id().toString(),
                 dto.seats()).getBody();
 
-        // TODO VER SE HA RESERVAS NO ASSENTO
-
         if (!resSeats.allExists()) {
             throw new SeatDontExistsException(String.format(
                     ExceptionConstants.SEAT_DONT_EXISTS_IN_ROOM,
                     resSeats.missingSeatIds()));
+        }
+
+        boolean seetIsntReservedYet = reservationRepository.noConfirmedReservationExists(dto.sessionId(),
+                dto.seats());
+
+        if (!seetIsntReservedYet) {
+            throw new SeatAlreadyReservedException(ExceptionConstants.SEAT_ALREADY_RESERVED);
         }
 
         List<Reservation> reservations = buildPendingReservations(dto, seatIds, userId);

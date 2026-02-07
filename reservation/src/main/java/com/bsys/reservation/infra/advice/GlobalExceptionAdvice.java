@@ -2,6 +2,7 @@ package com.bsys.reservation.infra.advice;
 
 import com.bsys.reservation.infra.exceptions.ReservationPersistenceException;
 import com.bsys.reservation.infra.exceptions.SessionUnavailableException;
+import com.bsys.reservation.infra.exceptions.SeatAlreadyReservedException;
 import com.bsys.reservation.infra.exceptions.SeatDontExistsException;
 import com.bsys.reservation.infra.exceptions.SeatUnavailableException;
 import org.springframework.http.HttpStatus;
@@ -32,6 +33,12 @@ public class GlobalExceptionAdvice {
 
     @ExceptionHandler(SessionUnavailableException.class)
     public ResponseEntity<FeignExceptionAdvice.ErrorResponse> sessaoIndisponivel(SessionUnavailableException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                new FeignExceptionAdvice.ErrorResponse(HttpStatus.CONFLICT.toString(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(SeatAlreadyReservedException.class)
+    public ResponseEntity<FeignExceptionAdvice.ErrorResponse> assentoJaReservado(SeatAlreadyReservedException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(
                 new FeignExceptionAdvice.ErrorResponse(HttpStatus.CONFLICT.toString(), ex.getMessage()));
     }
