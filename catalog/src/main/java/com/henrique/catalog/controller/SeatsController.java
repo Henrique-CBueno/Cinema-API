@@ -22,43 +22,43 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class SeatsController {
 
-        private final SeatsService seatsService;
+    private final SeatsService seatsService;
 
-        @GetMapping
-        public ResponseEntity<SuccessListDataResponse> getAllSeatsByCinemaRoom(@PathVariable String cinemaId,
-                        @PathVariable String roomId,
-                        PaginationParams paginationParams) {
+    @GetMapping
+    public ResponseEntity<SuccessListDataResponse> getAllSeatsByCinemaRoom(@PathVariable String cinemaId,
+            @PathVariable String roomId,
+            PaginationParams paginationParams) {
 
-                Page<SeatResDTO> seats = seatsService.getSeatsByCinemaRoom(UUID.fromString(roomId),
-                                paginationParams.toPageable());
+        Page<SeatResDTO> seats = seatsService.getSeatsByCinemaRoom(UUID.fromString(roomId),
+                paginationParams.toPageable());
 
-                if (seats.getContent().isEmpty())
-                        return ResponseEntity.noContent().build();
+        if (seats.getContent().isEmpty())
+            return ResponseEntity.noContent().build();
 
-                return ResponseEntity.ok(new SuccessListDataResponse(seats.getContent(),
-                                seats.getNumber(),
-                                seats.getSize(),
-                                seats.getTotalElements()));
-        }
+        return ResponseEntity.ok(new SuccessListDataResponse(seats.getContent(),
+                seats.getNumber(),
+                seats.getSize(),
+                seats.getTotalElements()));
+    }
 
-        @PostMapping
-        public ResponseEntity<Void> createSeatsInCinemaRoom(@PathVariable String cinemaId,
-                        @PathVariable String roomId,
-                        @RequestBody @Valid List<CreateSeatReqDTO> seats,
-                        @RequestHeader(value = "X-User-Id", required = false) String userId) {
+    @PostMapping
+    public ResponseEntity<Void> createSeatsInCinemaRoom(@PathVariable String cinemaId,
+            @PathVariable String roomId,
+            @RequestBody @Valid List<CreateSeatReqDTO> seats,
+            @RequestHeader(value = "X-User-Id", required = false) String userId) {
 
-                seatsService.createSeatsInCinemaRoom(UUID.fromString(cinemaId),
-                                UUID.fromString(roomId),
-                                seats,
-                                UUID.fromString(userId));
+        seatsService.createSeatsInCinemaRoom(UUID.fromString(cinemaId),
+                UUID.fromString(roomId),
+                seats,
+                UUID.fromString(userId));
 
-                URI uri = ServletUriComponentsBuilder
-                                .fromCurrentRequest()
-                                .build()
-                                .toUri();
+        URI uri = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .build()
+                .toUri();
 
-                return ResponseEntity.created(uri).build();
-        }
+        return ResponseEntity.created(uri).build();
+    }
 
         @PostMapping("exists")
         public ResponseEntity<SeatsExistenceResDTO> checkSeatsExistence(@PathVariable String cinemaId,
@@ -77,10 +77,10 @@ public class SeatsController {
                         @PathVariable String roomId,
                         @PathVariable String seatId) {
 
-                seatsService.deleteSeatFromRoom(UUID.fromString(cinemaId),
-                                UUID.fromString(roomId),
-                                UUID.fromString(seatId));
+        seatsService.deleteSeatFromRoom(UUID.fromString(cinemaId),
+                UUID.fromString(roomId),
+                UUID.fromString(seatId));
 
-                return ResponseEntity.noContent().build();
-        }
+        return ResponseEntity.noContent().build();
+    }
 }

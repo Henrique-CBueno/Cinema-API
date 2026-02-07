@@ -364,6 +364,14 @@ Arquivo: [src/test/java/com/henrique/catalog/service/SeatsServiceTest.java](src/
 - Mensagem de erro contém `seatId`, `roomId` e `cinemaId`.
 - Lança `NotFoundException` quando retorno é negativo.
 
+### `validateSeatsInRoom(UUID, UUID, List<UUID>)`
+
+- Retorna `allExists = true` quando a lista é `null`.
+- Retorna `allExists = true` quando a lista é vazia.
+- Retorna `allExists = false` e `missingSeatIds` quando algum id não existe.
+- Retorna `allExists = true` quando todos os ids existem.
+- Remove duplicados em `missingSeatIds` quando a entrada contém ids repetidos.
+
 ---
 
 ## SeatsControllerTest
@@ -395,6 +403,11 @@ Arquivo: [src/test/java/com/henrique/catalog/controller/SeatsControllerTest.java
 - Envia `cinemaId`, `roomId` e `seatId` corretos ao serviço.
 - Chama método de exclusão do serviço.
 - Suporta exclusão de diferentes IDs de assentos.
+
+### `checkSeatsExistence(String, String, List<UUID>)`
+
+- Retorna **200 OK** com corpo de resposta.
+- Envia `cinemaId`, `roomId` e lista de ids corretos ao serviço.
 
 ---
 

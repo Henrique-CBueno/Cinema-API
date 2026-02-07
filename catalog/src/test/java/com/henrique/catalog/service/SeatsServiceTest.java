@@ -2,6 +2,7 @@ package com.henrique.catalog.service;
 
 import com.henrique.catalog.domain.dto.req.seat.CreateSeatReqDTO;
 import com.henrique.catalog.domain.dto.res.seat.SeatResDTO;
+import com.henrique.catalog.domain.dto.res.seat.SeatsExistenceResDTO;
 import com.henrique.catalog.domain.entity.RoomEntity;
 import com.henrique.catalog.domain.entity.SeatEntity;
 import com.henrique.catalog.domain.mapper.SeatMapper;
@@ -487,6 +488,108 @@ class SeatsServiceTest {
                         // Act & Assert
                         assertThrows(NotFoundException.class,
                                         () -> seatsService.deleteSeatFromRoom(cinemaId, roomId, seatId));
+                }
+        }
+
+        @Nested
+        class ValidateSeatsInRoom {
+
+                @Test
+                void shouldReturnAllExistsTrueWhenSeatIdsIsNull() {
+                        // Arrange
+                        UUID cinemaId = UUID.randomUUID();
+                        UUID roomId = UUID.randomUUID();
+
+                        // Act
+                        SeatsExistenceResDTO result = seatsService.validateSeatsInRoom(cinemaId, roomId, null);
+
+                        // Assert
+                        assertTrue(result.allExists());
+                        assertNotNull(result.missingSeatIds());
+                        assertTrue(result.missingSeatIds().isEmpty());
+                        verify(seatsRepository, never()).findExistingSeatIdsInRoom(any(), any(), any());
+                }
+
+                @Test
+                void shouldReturnAllExistsTrueWhenSeatIdsIsEmpty() {
+                        // Arrange
+                        UUID cinemaId = UUID.randomUUID();
+                        UUID roomId = UUID.randomUUID();
+
+                        // Act
+                        SeatsExistenceResDTO result = seatsService.validateSeatsInRoom(cinemaId, roomId, List.of());
+
+                        // Assert
+                        assertTrue(result.allExists());
+                        assertNotNull(result.missingSeatIds());
+                        assertTrue(result.missingSeatIds().isEmpty());
+                        verify(seatsRepository, never()).findExistingSeatIdsInRoom(any(), any(), any());
+                }
+
+                @Test
+                void shouldReturnMissingIdsWhenAnySeatDoesNotExist() {
+                        // Arrange
+                        UUID cinemaId = UUID.randomUUID();
+                        UUID roomId = UUID.randomUUID();
+                        UUID seat1 = UUID.randomUUID();
+                        UUID seat2 = UUID.randomUUID();
+                        UUID seat3 = UUID.randomUUID();
+
+                        List<UUID> requested = List.of(seat1, seat2, seat3);
+                        List<UUID> existing = List.of(seat1, seat3);
+
+                        when(seatsRepository.findExistingSeatIdsInRoom(cinemaId, roomId, requested))
+                                        .thenReturn(existing);
+
+                        // Act
+                        SeatsExistenceResDTO result = seatsService.validateSeatsInRoom(cinemaId, roomId, requested);
+
+                        // Assert
+                        assertFalse(result.allExists());
+                        assertEquals(List.of(seat2), result.missingSeatIds());
+                }
+
+                @Test
+                void shouldReturnAllExistsTrueWhenAllSeatsExist() {
+                        // Arrange
+                        UUID cinemaId = UUID.randomUUID();
+                        UUID roomId = UUID.randomUUID();
+                        UUID seat1 = UUID.randomUUID();
+                        UUID seat2 = UUID.randomUUID();
+
+                        List<UUID> requested = List.of(seat1, seat2);
+
+                        when(seatsRepository.findExistingSeatIdsInRoom(cinemaId, roomId, requested))
+                                        .thenReturn(requested);
+
+                        // Act
+                        SeatsExistenceResDTO result = seatsService.validateSeatsInRoom(cinemaId, roomId, requested);
+
+                        // Assert
+                        assertTrue(result.allExists());
+                        assertTrue(result.missingSeatIds().isEmpty());
+                }
+
+                @Test
+                void shouldReturnDistinctMissingIdsWhenInputHasDuplicates() {
+                        // Arrange
+                        UUID cinemaId = UUID.randomUUID();
+                        UUID roomId = UUID.randomUUID();
+                        UUID seat1 = UUID.randomUUID();
+                        UUID seat2 = UUID.randomUUID();
+
+                        List<UUID> requested = List.of(seat1, seat2, seat2);
+                        List<UUID> existing = List.of(seat1);
+
+                        when(seatsRepository.findExistingSeatIdsInRoom(cinemaId, roomId, requested))
+                                        .thenReturn(existing);
+
+                        // Act
+                        SeatsExistenceResDTO result = seatsService.validateSeatsInRoom(cinemaId, roomId, requested);
+
+                        // Assert
+                        assertFalse(result.allExists());
+                        assertEquals(List.of(seat2), result.missingSeatIds());
                 }
         }
 }
