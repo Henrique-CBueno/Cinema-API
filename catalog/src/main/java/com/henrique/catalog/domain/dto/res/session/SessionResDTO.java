@@ -11,6 +11,7 @@ import java.util.UUID;
 public record SessionResDTO(UUID id,
                             MovieResDTO movie,
                             RoomsResDTO room,
+                            UUID cinemaId,
                             LocalDateTime startTime,
                             LocalDateTime endTime,
                             BigDecimal price,

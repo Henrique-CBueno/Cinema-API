@@ -17,6 +17,7 @@ import java.util.UUID;
 @Mapper(componentModel = "spring", uses = {MovieMapper.class, RoomsMapper.class})
 public interface SessionMapper {
 
+    @Mapping(source = "room.cinema.id", target = "cinemaId")
     SessionResDTO toDTO(SessionEntity sessionEntity);
 
     @Mapping(target = "id", ignore = true)
