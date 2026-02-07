@@ -6,9 +6,11 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.*;
 import io.swagger.v3.oas.models.servers.Server;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 
+@Configuration
 public class OpenAiConfig {
 
     @Bean
@@ -37,7 +39,7 @@ public class OpenAiConfig {
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .servers(List.of(
                         new Server()
-                                .url("http://localhost:8080/reserves")
+                                .url("http://localhost:8080/reservation")
                                 .description("Gateway - Ambiente de Desenvolvimento")
                 ));
     }

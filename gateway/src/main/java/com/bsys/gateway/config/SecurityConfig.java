@@ -45,7 +45,8 @@ public class SecurityConfig {
 
                         .requestMatchers("/hello/**").hasRole("GATEWAY_ADMIN")
                         .requestMatchers("/catalog/**").permitAll()
-                        
+                        .requestMatchers("/reservation/**").permitAll()
+
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
