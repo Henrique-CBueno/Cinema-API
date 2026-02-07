@@ -21,7 +21,7 @@ public class RedisService {
     @Value("${cinema.reservation.lock-timeout:300}")
     private long lockTimeoutSeconds;
 
-    public String lockSeat(Long sessionId, String seatNumber, String userId) {
+    public String lockSeat(UUID sessionId, String seatNumber, String userId) {
 
         String key = buildSeatKey(sessionId, seatNumber);
         String lockToken = UUID.randomUUID().toString();
@@ -42,7 +42,7 @@ public class RedisService {
     /**
      * Tenta fazer lock de múltiplos assentos
      */
-    public boolean lockSeats(Long sessionId, List<String> seatNumbers, String userId) {
+    public boolean lockSeats(UUID sessionId, List<String> seatNumbers, String userId) {
         String lockToken = UUID.randomUUID().toString();
 
         for (String seatNumber : seatNumbers) {
@@ -64,7 +64,7 @@ public class RedisService {
     /**
      * Libera o lock de um assento (após pagamento confirmado ou cancelamento)
      */
-    public void unlockSeat(Long sessionId, String seatNumber, String lockToken) {
+    public void unlockSeat(UUID sessionId, String seatNumber, String lockToken) {
         String key = buildSeatKey(sessionId, seatNumber);
 
         // Verifica se o token bate antes de deletar (segurança)
@@ -78,14 +78,14 @@ public class RedisService {
     /**
      * Libera múltiplos assentos
      */
-    public void unlockSeats(Long sessionId, List<String> seatNumbers, String lockToken) {
+    public void unlockSeats(UUID sessionId, List<String> seatNumbers, String lockToken) {
         seatNumbers.forEach(seatNumber -> unlockSeat(sessionId, seatNumber, lockToken));
     }
 
     /**
      * Verifica se um assento está bloqueado
      */
-    public boolean isSeatLocked(Long sessionId, String seatNumber) {
+    public boolean isSeatLocked(UUID sessionId, String seatNumber) {
         String key = buildSeatKey(sessionId, seatNumber);
         return Boolean.TRUE.equals(redisTemplate.hasKey(key));
     }
@@ -93,7 +93,7 @@ public class RedisService {
     /**
      * Renova o tempo de expiração do lock (útil para processos longos)
      */
-    public boolean renewLock(Long sessionId, String seatNumber, String lockToken) {
+    public boolean renewLock(UUID sessionId, String seatNumber, String lockToken) {
         String key = buildSeatKey(sessionId, seatNumber);
         String currentToken = (String) redisTemplate.opsForValue().get(key);
 
@@ -108,12 +108,12 @@ public class RedisService {
     /**
      * Obtém o tempo restante do lock em segundos
      */
-    public Long getLockRemainingTime(Long sessionId, String seatNumber) {
+    public Long getLockRemainingTime(UUID sessionId, String seatNumber) {
         String key = buildSeatKey(sessionId, seatNumber);
         return redisTemplate.getExpire(key, TimeUnit.SECONDS);
     }
 
-    private String buildSeatKey(Long sessionId, String seatNumber) {
-        return String.format("cinema:session:%d:seat:%s", sessionId, seatNumber);
+    private String buildSeatKey(UUID sessionId, String seatNumber) {
+        return String.format("cinema:session:%s:seat:%s", sessionId, seatNumber);
     }
 }

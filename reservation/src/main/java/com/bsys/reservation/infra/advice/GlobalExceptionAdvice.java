@@ -1,0 +1,38 @@
+package com.bsys.reservation.infra.advice;
+
+import com.bsys.reservation.infra.exceptions.ReservationPersistenceException;
+import com.bsys.reservation.infra.exceptions.SessionUnavailableException;
+import com.bsys.reservation.infra.exceptions.SeatDontExistsException;
+import com.bsys.reservation.infra.exceptions.SeatUnavailableException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+@RestControllerAdvice
+public class GlobalExceptionAdvice {
+
+    @ExceptionHandler(SeatDontExistsException.class)
+    public ResponseEntity<FeignExceptionAdvice.ErrorResponse> naoExisteAssento(SeatDontExistsException ex) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body(
+                new FeignExceptionAdvice.ErrorResponse(HttpStatus.UNPROCESSABLE_CONTENT.toString(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(SeatUnavailableException.class)
+    public ResponseEntity<FeignExceptionAdvice.ErrorResponse> assentoIndisponivel(SeatUnavailableException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                new FeignExceptionAdvice.ErrorResponse(HttpStatus.CONFLICT.toString(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(ReservationPersistenceException.class)
+    public ResponseEntity<FeignExceptionAdvice.ErrorResponse> erroAoCriarReserva(ReservationPersistenceException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                new FeignExceptionAdvice.ErrorResponse(HttpStatus.CONFLICT.toString(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(SessionUnavailableException.class)
+    public ResponseEntity<FeignExceptionAdvice.ErrorResponse> sessaoIndisponivel(SessionUnavailableException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                new FeignExceptionAdvice.ErrorResponse(HttpStatus.CONFLICT.toString(), ex.getMessage()));
+    }
+}
