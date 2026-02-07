@@ -1,6 +1,7 @@
 package com.henrique.catalog.repository;
 
 import com.henrique.catalog.domain.entity.SessionEntity;
+import com.henrique.catalog.domain.entity.enums.SessionStatus;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,8 +37,31 @@ public interface SessionRepository extends JpaRepository<SessionEntity, UUID> {
 
     @Modifying
     @Transactional
-    @Query("UPDATE SessionEntity s SET s.active = false WHERE s.id = :sessionId AND s.room.id = :roomId AND s.room.cinema.id = :cinemaId")
+    @Query("UPDATE SessionEntity s SET s.status = 'CANCELED' WHERE s.id = :sessionId AND s.room.id = :roomId AND s.room.cinema.id = :cinemaId")
     int softDeleteById(@Param("sessionId") UUID sessionId,
                        @Param("roomId") UUID roomId,
                        @Param("cinemaId") UUID cinemaId);
+
+    @Modifying
+    @Transactional
+    @Query("""
+        UPDATE SessionEntity s
+        SET s.status = 'IN_PROGRESS'
+        WHERE s.status = 'SCHEDULED'
+          AND s.startTime <= :now
+          AND s.endTime > :now
+          AND s.active = true
+    """)
+    int updateScheduledToInProgress(@Param("now") LocalDateTime now);
+
+    @Modifying
+    @Transactional
+    @Query("""
+        UPDATE SessionEntity s
+        SET s.status = 'FINISHED'
+        WHERE s.status = 'IN_PROGRESS'
+          AND s.endTime <= :now
+          AND s.active = true
+    """)
+    int updateInProgressToFinished(@Param("now") LocalDateTime now);
 }

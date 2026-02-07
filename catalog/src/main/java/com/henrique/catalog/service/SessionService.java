@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -82,9 +81,9 @@ public class SessionService {
         }
     }
 
-    public void deleteSeatFromSession(UUID cinemaId,
-                                   UUID roomId,
-                                   UUID sessionId) {
+    public void cancelSession(UUID cinemaId,
+                              UUID roomId,
+                              UUID sessionId) {
 
         int affectedRows = sessionRepository.softDeleteById(sessionId, roomId, cinemaId);
 
@@ -93,5 +92,14 @@ public class SessionService {
                     ExceptionsConstants.SESSION_DONT_EXISTS,
                     sessionId
             ));
+    }
+
+
+    public int updateScheduledToInProgress(LocalDateTime now) {
+        return sessionRepository.updateScheduledToInProgress(now);
+    }
+
+    public int updateInProgressToFinished(LocalDateTime now) {
+        return sessionRepository.updateInProgressToFinished(now);
     }
 }
