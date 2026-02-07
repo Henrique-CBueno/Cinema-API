@@ -6,10 +6,10 @@ spring:
       server:
         webmvc:
           routes:
-            - id: hello-api
-              uri: lb://hello
+            - id: reservation
+              uri: lb://reservation
               predicates:
-                - Path=/hello/**
+                - Path=/reservation/**
               filters:
                 - TokenRelay= # Repassa o token para o serviço de destino
 
@@ -45,6 +45,8 @@ springdoc:
     urls:
       - name: catalog-service
         url: /catalog/v3/api-docs
+      - name: reservation-service
+        url: /reservation/v3/api-docs
     oauth2-redirect-url: http://localhost:8080/swagger-ui/oauth2-redirect.html
     oauth:
       client-id: swagger
