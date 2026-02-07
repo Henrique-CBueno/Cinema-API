@@ -50,3 +50,14 @@ server:
 cinema:
   reservation:
     lock-timeout: 300
+
+clients:
+  catalog:
+    url: "http://localhost:8080/catalog"
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 3000
+        readTimeout: 5000
