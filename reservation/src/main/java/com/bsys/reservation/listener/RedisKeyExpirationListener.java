@@ -1,20 +1,27 @@
 package com.bsys.reservation.listener;
 
+import com.bsys.reservation.service.ReservationService;
 import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
+@RequiredArgsConstructor
 @Slf4j
 public class RedisKeyExpirationListener implements MessageListener {
+
+    private final ReservationService reservationService;
 
     @Override
     public void onMessage(Message message, byte[] pattern) {
 
         String expiredKey = message.toString();
 
-        // cinema:session:12:seat:A5
+        // cinema:session:{sessionId}:seat:{seatId}
         if (!expiredKey.startsWith("cinema:session:")) {
             return;
         }
@@ -27,13 +34,20 @@ public class RedisKeyExpirationListener implements MessageListener {
     private void handleSeatLockExpiration(String key) {
         try {
             String[] parts = key.split(":");
-            Long sessionId = Long.valueOf(parts[2]);
-            String seatNumber = parts[4];
+            if (parts.length < 5) {
+                log.warn("Formato de chave invalido: {}", key);
+                return;
+            }
 
-            // AQUI EU TENHO QUE COLOCAR QUE O PAGAMENTO FALHOU
+            UUID sessionId = UUID.fromString(parts[2]);
+            UUID seatId = UUID.fromString(parts[4]);
 
-            log.info("Assento liberado automaticamente: sessão={}, assento={}",
-                    sessionId, seatNumber);
+            boolean updated = reservationService.expirePendingReservation(sessionId, seatId);
+            if (updated) {
+                log.info("Reserva expirada: sessão={}, assento={}", sessionId, seatId);
+            } else {
+                log.info("Nenhuma reserva pendente encontrada: sessão={}, assento={}", sessionId, seatId);
+            }
 
         } catch (Exception e) {
             log.error("Erro ao processar expiração do lock: {}", key, e);

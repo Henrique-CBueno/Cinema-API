@@ -120,4 +120,14 @@ public class ReservationService {
                     String.join(",", seatNumbers)));
         }
     }
+
+    @Transactional
+    public boolean expirePendingReservation(UUID sessionId, UUID seatId) {
+        int updated = reservationRepository.updateReservationStatus(
+                sessionId,
+                seatId,
+                ReserveState.PENDING_PAYMENT,
+                ReserveState.EXPIRED);
+        return updated > 0;
+    }
 }
