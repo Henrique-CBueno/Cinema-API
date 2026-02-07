@@ -69,7 +69,7 @@ public class SessionController {
                                            @PathVariable String roomId,
                                            @PathVariable String sessionId) {
 
-        sessionService.deleteSeatFromSession(UUID.fromString(cinemaId),
+        sessionService.cancelSession(UUID.fromString(cinemaId),
                 UUID.fromString(roomId),
                 UUID.fromString(sessionId));
 

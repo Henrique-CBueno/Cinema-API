@@ -340,7 +340,7 @@ class SessionServiceTest {
                     .thenReturn(1);
 
             // Act
-            sessionService.deleteSeatFromSession(cinemaId, roomId, sessionId);
+            sessionService.cancelSession(cinemaId, roomId, sessionId);
 
             // Assert
             verify(sessionRepository, times(1)).softDeleteById(sessionId, roomId, cinemaId);
@@ -358,7 +358,7 @@ class SessionServiceTest {
 
             // Act & Assert
             assertThrows(NotFoundException.class,
-                    () -> sessionService.deleteSeatFromSession(cinemaId, roomId, sessionId));
+                    () -> sessionService.cancelSession(cinemaId, roomId, sessionId));
             verify(sessionRepository, times(1)).softDeleteById(sessionId, roomId, cinemaId);
         }
 
@@ -374,7 +374,7 @@ class SessionServiceTest {
 
             // Act & Assert
             NotFoundException exception = assertThrows(NotFoundException.class,
-                    () -> sessionService.deleteSeatFromSession(cinemaId, roomId, sessionId));
+                    () -> sessionService.cancelSession(cinemaId, roomId, sessionId));
             assertTrue(exception.getMessage().contains(sessionId.toString()));
         }
 
@@ -390,7 +390,7 @@ class SessionServiceTest {
 
             // Act & Assert
             assertThrows(NotFoundException.class,
-                    () -> sessionService.deleteSeatFromSession(cinemaId, roomId, sessionId));
+                    () -> sessionService.cancelSession(cinemaId, roomId, sessionId));
         }
     }
 

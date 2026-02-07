@@ -291,7 +291,7 @@ class SessionControllerTest {
 
                             doNothing()
                                     .when(sessionService)
-                                    .deleteSeatFromSession(cinemaId, roomId, sessionId);
+                                    .cancelSession(cinemaId, roomId, sessionId);
 
                         // Act
                         ResponseEntity<Void> response = sessionController.deleteSeat(
@@ -312,13 +312,13 @@ class SessionControllerTest {
 
                             doNothing()
                                     .when(sessionService)
-                                    .deleteSeatFromSession(any(UUID.class), any(UUID.class), any(UUID.class));
+                                    .cancelSession(any(UUID.class), any(UUID.class), any(UUID.class));
 
                         // Act
                         sessionController.deleteSeat(cinemaId.toString(), roomId.toString(), sessionId.toString());
 
                         // Assert
-                        verify(sessionService, times(1)).deleteSeatFromSession(cinemaId, roomId, sessionId);
+                        verify(sessionService, times(1)).cancelSession(cinemaId, roomId, sessionId);
                 }
 
                 @Test
@@ -330,13 +330,13 @@ class SessionControllerTest {
 
                             doNothing()
                                     .when(sessionService)
-                                    .deleteSeatFromSession(any(UUID.class), any(UUID.class), any(UUID.class));
+                                    .cancelSession(any(UUID.class), any(UUID.class), any(UUID.class));
 
                         // Act
                         sessionController.deleteSeat(cinemaId.toString(), roomId.toString(), sessionId.toString());
 
                         // Assert
-                        verify(sessionService, times(1)).deleteSeatFromSession(any(UUID.class), any(UUID.class), any(UUID.class));
+                        verify(sessionService, times(1)).cancelSession(any(UUID.class), any(UUID.class), any(UUID.class));
                 }
 
                 @Test
@@ -349,14 +349,14 @@ class SessionControllerTest {
 
                             doNothing()
                                     .when(sessionService)
-                                    .deleteSeatFromSession(any(UUID.class), any(UUID.class), any(UUID.class));
+                                    .cancelSession(any(UUID.class), any(UUID.class), any(UUID.class));
 
                         // Act
                         sessionController.deleteSeat(cinemaId.toString(), roomId.toString(), sessionId1.toString());
                         sessionController.deleteSeat(cinemaId.toString(), roomId.toString(), sessionId2.toString());
 
                         // Assert
-                        verify(sessionService, times(2)).deleteSeatFromSession(any(UUID.class), any(UUID.class), any(UUID.class));
+                        verify(sessionService, times(2)).cancelSession(any(UUID.class), any(UUID.class), any(UUID.class));
                 }
         }
 
