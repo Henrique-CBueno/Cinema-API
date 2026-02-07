@@ -9,17 +9,23 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import jakarta.transaction.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface SeatsRepository extends JpaRepository<SeatEntity, UUID> {
 
-    Page<SeatEntity> findAllByRoomId(UUID roomId,
-            Pageable pageable);
+        Page<SeatEntity> findAllByRoomId(UUID roomId,
+                        Pageable pageable);
 
-    @Modifying
-    @Transactional
-    @Query("UPDATE SeatEntity s SET s.active = false WHERE s.id = :seatId AND s.room.id = :roomId AND s.room.cinema.id = :cinemaId")
-    int softDeleteById(@Param("seatId") UUID seatId,
-            @Param("roomId") UUID roomId,
-            @Param("cinemaId") UUID cinemaId);
+        @Modifying
+        @Transactional
+        @Query("UPDATE SeatEntity s SET s.active = false WHERE s.id = :seatId AND s.room.id = :roomId AND s.room.cinema.id = :cinemaId")
+        int softDeleteById(@Param("seatId") UUID seatId,
+                        @Param("roomId") UUID roomId,
+                        @Param("cinemaId") UUID cinemaId);
+
+        @Query("SELECT s.id FROM SeatEntity s WHERE s.id IN :seatIds AND s.room.id = :roomId AND s.room.cinema.id = :cinemaId")
+        List<UUID> findExistingSeatIdsInRoom(@Param("cinemaId") UUID cinemaId,
+                        @Param("roomId") UUID roomId,
+                        @Param("seatIds") List<UUID> seatIds);
 }

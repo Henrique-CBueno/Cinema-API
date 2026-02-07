@@ -2,6 +2,7 @@ package com.henrique.catalog.controller;
 
 import com.henrique.catalog.domain.dto.global.PaginationParams;
 import com.henrique.catalog.domain.dto.req.seat.CreateSeatReqDTO;
+import com.henrique.catalog.domain.dto.res.seat.SeatsExistenceResDTO;
 import com.henrique.catalog.domain.dto.res.seat.SeatResDTO;
 import com.henrique.catalog.infra.padronize.SuccessListDataResponse;
 import com.henrique.catalog.service.SeatsService;
@@ -21,53 +22,65 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class SeatsController {
 
-    private final SeatsService seatsService;
+        private final SeatsService seatsService;
 
-    @GetMapping
-    public ResponseEntity<SuccessListDataResponse> getAllSeatsByCinemaRoom(@PathVariable String cinemaId,
-            @PathVariable String roomId,
-            PaginationParams paginationParams) {
+        @GetMapping
+        public ResponseEntity<SuccessListDataResponse> getAllSeatsByCinemaRoom(@PathVariable String cinemaId,
+                        @PathVariable String roomId,
+                        PaginationParams paginationParams) {
 
-        Page<SeatResDTO> seats = seatsService.getSeatsByCinemaRoom(UUID.fromString(roomId),
-                paginationParams.toPageable());
+                Page<SeatResDTO> seats = seatsService.getSeatsByCinemaRoom(UUID.fromString(roomId),
+                                paginationParams.toPageable());
 
-        if (seats.getContent().isEmpty())
-            return ResponseEntity.noContent().build();
+                if (seats.getContent().isEmpty())
+                        return ResponseEntity.noContent().build();
 
-        return ResponseEntity.ok(new SuccessListDataResponse(seats.getContent(),
-                seats.getNumber(),
-                seats.getSize(),
-                seats.getTotalElements()));
-    }
+                return ResponseEntity.ok(new SuccessListDataResponse(seats.getContent(),
+                                seats.getNumber(),
+                                seats.getSize(),
+                                seats.getTotalElements()));
+        }
 
-    @PostMapping
-    public ResponseEntity<Void> createSeatsInCinemaRoom(@PathVariable String cinemaId,
-            @PathVariable String roomId,
-            @RequestBody @Valid List<CreateSeatReqDTO> seats,
-            @RequestHeader(value = "X-User-Id", required = false) String userId) {
+        @PostMapping
+        public ResponseEntity<Void> createSeatsInCinemaRoom(@PathVariable String cinemaId,
+                        @PathVariable String roomId,
+                        @RequestBody @Valid List<CreateSeatReqDTO> seats,
+                        @RequestHeader(value = "X-User-Id", required = false) String userId) {
 
-        seatsService.createSeatsInCinemaRoom(UUID.fromString(cinemaId),
-                UUID.fromString(roomId),
-                seats,
-                UUID.fromString(userId));
+                seatsService.createSeatsInCinemaRoom(UUID.fromString(cinemaId),
+                                UUID.fromString(roomId),
+                                seats,
+                                UUID.fromString(userId));
 
-        URI uri = ServletUriComponentsBuilder
-                .fromCurrentRequest()
-                .build()
-                .toUri();
+                URI uri = ServletUriComponentsBuilder
+                                .fromCurrentRequest()
+                                .build()
+                                .toUri();
 
-        return ResponseEntity.created(uri).build();
-    }
+                return ResponseEntity.created(uri).build();
+        }
 
-    @DeleteMapping("{seatId}")
-    public ResponseEntity<Void> deleteSeat(@PathVariable String cinemaId,
-            @PathVariable String roomId,
-            @PathVariable String seatId) {
+        @PostMapping("exists")
+        public ResponseEntity<SeatsExistenceResDTO> checkSeatsExistence(@PathVariable String cinemaId,
+                        @PathVariable String roomId,
+                        @RequestBody List<UUID> seatIds) {
 
-        seatsService.deleteSeatFromRoom(UUID.fromString(cinemaId),
-                UUID.fromString(roomId),
-                UUID.fromString(seatId));
+                SeatsExistenceResDTO result = seatsService.validateSeatsInRoom(UUID.fromString(cinemaId),
+                                UUID.fromString(roomId),
+                                seatIds);
 
-        return ResponseEntity.noContent().build();
-    }
+                return ResponseEntity.ok(result);
+        }
+
+        @DeleteMapping("{seatId}")
+        public ResponseEntity<Void> deleteSeat(@PathVariable String cinemaId,
+                        @PathVariable String roomId,
+                        @PathVariable String seatId) {
+
+                seatsService.deleteSeatFromRoom(UUID.fromString(cinemaId),
+                                UUID.fromString(roomId),
+                                UUID.fromString(seatId));
+
+                return ResponseEntity.noContent().build();
+        }
 }

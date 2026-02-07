@@ -1,7 +1,7 @@
 package com.henrique.catalog.service;
 
 import com.henrique.catalog.domain.dto.req.seat.CreateSeatReqDTO;
-import com.henrique.catalog.domain.dto.res.rooms.RoomsResDTO;
+import com.henrique.catalog.domain.dto.res.seat.SeatsExistenceResDTO;
 import com.henrique.catalog.domain.dto.res.seat.SeatResDTO;
 import com.henrique.catalog.domain.entity.RoomEntity;
 import com.henrique.catalog.domain.entity.SeatEntity;
@@ -11,7 +11,6 @@ import com.henrique.catalog.infra.exceptions.DuplicateResourceException;
 import com.henrique.catalog.infra.exceptions.NotFoundException;
 import com.henrique.catalog.infra.exceptions.UnprocessableEntityException;
 import com.henrique.catalog.repository.SeatsRepository;
-import io.micrometer.observation.Observation;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
@@ -20,9 +19,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -92,6 +92,24 @@ public class SeatsService {
                     seatId,
                     roomId,
                     cinemaId));
+    }
+
+    public SeatsExistenceResDTO validateSeatsInRoom(UUID cinemaId,
+            UUID roomId,
+            List<UUID> seatIds) {
+
+        if (seatIds == null || seatIds.isEmpty()) {
+            return new SeatsExistenceResDTO(true, List.of());
+        }
+
+        List<UUID> existingIds = seatsRepository.findExistingSeatIdsInRoom(cinemaId, roomId, seatIds);
+        Set<UUID> existingSet = new HashSet<>(existingIds);
+        List<UUID> missingIds = seatIds.stream()
+                .filter(id -> !existingSet.contains(id))
+                .distinct()
+                .toList();
+
+        return new SeatsExistenceResDTO(missingIds.isEmpty(), missingIds);
     }
 
 }
