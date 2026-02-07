@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import jakarta.transaction.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface SeatsRepository extends JpaRepository<SeatEntity, UUID> {
@@ -28,4 +29,8 @@ public interface SeatsRepository extends JpaRepository<SeatEntity, UUID> {
         List<UUID> findExistingSeatIdsInRoom(@Param("cinemaId") UUID cinemaId,
                         @Param("roomId") UUID roomId,
                         @Param("seatIds") List<UUID> seatIds);
+
+        Optional<SeatEntity> findByIdAndRoomIdAndRoomCinemaId(UUID seatId,
+                        UUID roomId,
+                        UUID cinemaId);
 }

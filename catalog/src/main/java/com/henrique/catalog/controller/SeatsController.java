@@ -5,6 +5,7 @@ import com.henrique.catalog.domain.dto.req.seat.CreateSeatReqDTO;
 import com.henrique.catalog.domain.dto.res.seat.SeatsExistenceResDTO;
 import com.henrique.catalog.domain.dto.res.seat.SeatResDTO;
 import com.henrique.catalog.infra.padronize.SuccessListDataResponse;
+import com.henrique.catalog.infra.padronize.SuccessResponse;
 import com.henrique.catalog.service.SeatsService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -60,22 +61,34 @@ public class SeatsController {
         return ResponseEntity.created(uri).build();
     }
 
-        @PostMapping("exists")
-        public ResponseEntity<SeatsExistenceResDTO> checkSeatsExistence(@PathVariable String cinemaId,
-                        @PathVariable String roomId,
-                        @RequestBody List<UUID> seatIds) {
-
-                SeatsExistenceResDTO result = seatsService.validateSeatsInRoom(UUID.fromString(cinemaId),
-                                UUID.fromString(roomId),
-                                seatIds);
-
-                return ResponseEntity.ok(result);
-        }
-
-        @DeleteMapping("{seatId}")
-        public ResponseEntity<Void> deleteSeat(@PathVariable String cinemaId,
+    @GetMapping("{seatId}")
+        public ResponseEntity<SuccessResponse> getSeatById(@PathVariable String cinemaId,
                         @PathVariable String roomId,
                         @PathVariable String seatId) {
+
+                SeatResDTO seat = seatsService.getSeatById(UUID.fromString(cinemaId),
+                                UUID.fromString(roomId),
+                                UUID.fromString(seatId));
+
+                return ResponseEntity.ok(new SuccessResponse(seat));
+        }
+
+    @PostMapping("exists")
+    public ResponseEntity<SeatsExistenceResDTO> checkSeatsExistence(@PathVariable String cinemaId,
+                    @PathVariable String roomId,
+                    @RequestBody List<UUID> seatIds) {
+
+            SeatsExistenceResDTO result = seatsService.validateSeatsInRoom(UUID.fromString(cinemaId),
+                            UUID.fromString(roomId),
+                            seatIds);
+
+            return ResponseEntity.ok(result);
+    }
+
+    @DeleteMapping("{seatId}")
+    public ResponseEntity<Void> deleteSeat(@PathVariable String cinemaId,
+                    @PathVariable String roomId,
+                    @PathVariable String seatId) {
 
         seatsService.deleteSeatFromRoom(UUID.fromString(cinemaId),
                 UUID.fromString(roomId),

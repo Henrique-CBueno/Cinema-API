@@ -40,6 +40,19 @@ public class SeatsService {
                 .map(seatMapper::toDTO);
     }
 
+        public SeatResDTO getSeatById(UUID cinemaId,
+            UUID roomId,
+            UUID seatId) {
+
+        return seatsRepository.findByIdAndRoomIdAndRoomCinemaId(seatId, roomId, cinemaId)
+            .map(seatMapper::toDTO)
+            .orElseThrow(() -> new NotFoundException(String.format(
+                ExceptionsConstants.SEAT_IN_ROOM_DONT_EXISTS,
+                seatId,
+                roomId,
+                cinemaId)));
+        }
+
     @Transactional
     public void createSeatsInCinemaRoom(UUID cinemaId,
             UUID roomId,
