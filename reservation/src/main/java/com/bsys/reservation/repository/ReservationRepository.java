@@ -13,17 +13,16 @@ import java.util.UUID;
 public interface ReservationRepository extends JpaRepository<Reservation, UUID> {
 
     @Query("""
-        SELECT CASE\s
-        WHEN COUNT(r) = 0 THEN true
-        ELSE false
-        END
-        FROM Reservation r
-        WHERE r.sessionId = :sessionId
-        AND r.seatId IN :seatIds
-        AND r.status = 'CONFIRMED'
-    """)
+                SELECT CASE\s
+                WHEN COUNT(r) = 0 THEN true
+                ELSE false
+                END
+                FROM Reservation r
+                WHERE r.sessionId = :sessionId
+                AND r.seatId IN :seatIds
+                AND r.status = com.bsys.reservation.domain.entity.enums.ReserveState.CONFIRMED
+            """)
     boolean noConfirmedReservationExists(
             @Param("sessionId") UUID sessionId,
-            @Param("seatIds") List<UUID> seatIds
-    );
+            @Param("seatIds") List<UUID> seatIds);
 }
