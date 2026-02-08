@@ -43,9 +43,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/catalog/sessions").hasRole("GATEWAY_ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/catalog/sessions/{cinemaId}/{roomId}/{sessionId}").hasRole("GATEWAY_ADMIN")
 
+                        .requestMatchers(HttpMethod.GET, "/reservation/{userId}").hasRole("GATEWAY_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/reservation/{id}").hasRole("GATEWAY_ADMIN")
+
                         .requestMatchers("/hello/**").hasRole("GATEWAY_ADMIN")
                         .requestMatchers("/catalog/**").permitAll()
-                        .requestMatchers("/reservation/**").permitAll()
+                        .requestMatchers("/reservation/**").authenticated()
 
                         .anyRequest().authenticated()
                 )

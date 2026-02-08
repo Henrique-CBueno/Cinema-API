@@ -53,7 +53,7 @@ public class reservationController {
 
 
 
-    
+
     @NonNull
     private ResponseEntity<SuccessListDataResponse<ReservationResDTO>> getSuccessListDataResponseResponseEntity(@PathVariable String userId, PaginationParams paginationParams) {
         Page<ReservationResDTO> userReservations = reservationService.getUserReservation(UUID.fromString(userId), paginationParams.toPageable());
