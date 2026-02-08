@@ -13,6 +13,13 @@ spring:
               filters:
                 - TokenRelay= # Repassa o token para o serviço de destino
 
+            - id: payment
+              uri: lb://payment
+              predicates:
+                - Path=/payment/**
+              filters:
+                - TokenRelay= # Repassa o token para o serviço de destino
+
             - id: catalog-api
               uri: lb://catalog
               predicates:
@@ -47,6 +54,8 @@ springdoc:
         url: /catalog/v3/api-docs
       - name: reservation-service
         url: /reservation/v3/api-docs
+      - name: payment-service
+        url: /payment/v3/api-docs
     oauth2-redirect-url: http://localhost:8080/swagger-ui/oauth2-redirect.html
     oauth:
       client-id: swagger

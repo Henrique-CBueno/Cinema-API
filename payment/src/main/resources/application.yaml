@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: payment
+  datasource:
+    url: jdbc:postgresql://localhost:5432/payment_db
+    username: cinema
+    password: cinema
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    # Garante que o script rode DEPOIS que o Hibernate criar as tabelas
+    defer-datasource-initialization: true
+
+eureka:
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: false
+  oauth:
+    client-id: swagger
+    scopes: openid, profile, email
+  # Força todas as requisições do Swagger a serem feitas via gateway
+  override-with-generic-response: false
+
+server:
+  port: 0
+  servlet:
+    context-path: /payment
+  # Configura o servidor público como sendo o gateway
+  forward-headers-strategy: framework
