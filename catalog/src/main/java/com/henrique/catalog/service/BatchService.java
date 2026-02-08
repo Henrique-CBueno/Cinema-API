@@ -14,8 +14,9 @@ import com.henrique.catalog.repository.SessionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,26 +29,55 @@ public class BatchService {
 
     public List<BatchResDTO> getBatchReserves(List<BatchReserveReqDTO> dtos) {
 
+        // Extract IDS to Set
+        Set<UUID> seatIds = dtos.stream()
+                .map(BatchReserveReqDTO::seatId)
+                .collect(Collectors.toSet());
+
+        Set<UUID> sessionIds = dtos.stream()
+                .map(BatchReserveReqDTO::sessionId)
+                .collect(Collectors.toSet());
+
+
+        // Find All set in one query
+        Map<UUID, SeatResDTO> seatsById =
+                seatsRepository.findAllById(seatIds).stream()
+                        .map(seatMapper::toDTO)
+                        .collect(Collectors.toMap(SeatResDTO::id, Function.identity()));
+
+        Map<UUID, SessionResDTO> sessionsById =
+                sessionRepository.findAllById(sessionIds).stream()
+                        .map(sessionMapper::toDTO)
+                        .collect(Collectors.toMap(SessionResDTO::id, Function.identity()));
+
         return dtos.stream()
-                .map(
-                        dto -> {
-                            SeatResDTO seat = seatsRepository.findById(dto.seatId()).map(seatMapper::toDTO)
-                                    .orElseThrow(
-                                            () -> new NotFoundException(ExceptionsConstants.SEAT_IN_ROOM_DONT_EXISTS)
-                                    );
+                .map(dto -> {
 
-                            SessionResDTO session = sessionRepository.findById(dto.sessionId()).map(sessionMapper::toDTO)
-                                    .orElseThrow(
-                                            () -> new NotFoundException(String.format(
-                                                    ExceptionsConstants.SESSION_DONT_EXISTS,
-                                                    dto.sessionId()
-                                            ))
-                                    );
+                    // Get seat By Map
+                    SeatResDTO seat = seatsById.get(dto.seatId());
+                    if (seat == null) {
+                        throw new NotFoundException(
+                                ExceptionsConstants.SEAT_IN_ROOM_DONT_EXISTS
+                        );
+                    }
 
-                            return new BatchResDTO(dto.reserveId(),
-                                    session,
-                                    seat);
-                        }
-                ).toList();
+                    // Get session by map
+                    SessionResDTO session = sessionsById.get(dto.sessionId());
+                    if (session == null) {
+                        throw new NotFoundException(
+                                String.format(
+                                        ExceptionsConstants.SESSION_DONT_EXISTS,
+                                        dto.sessionId()
+                                )
+                        );
+                    }
+
+                    return new BatchResDTO(
+                            dto.reserveId(),
+                            session,
+                            seat
+                    );
+                })
+                .toList();
     }
 }
