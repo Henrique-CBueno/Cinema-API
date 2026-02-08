@@ -2,6 +2,8 @@ package com.bsys.reservation.repository;
 
 import com.bsys.reservation.domain.entity.Reservation;
 import com.bsys.reservation.domain.entity.enums.ReserveState;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -42,4 +44,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, UUID> 
             @Param("seatId") UUID seatId,
             @Param("currentStatus") ReserveState currentStatus,
             @Param("newStatus") ReserveState newStatus);
+
+    Page<Reservation> findAllByUserId(UUID userId, Pageable pageable);
 }
