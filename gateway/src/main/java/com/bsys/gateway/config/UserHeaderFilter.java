@@ -30,6 +30,7 @@ public class UserHeaderFilter extends OncePerRequestFilter {
         requestWrapper.removeHeader("X-User-Id");
         requestWrapper.removeHeader("X-User-Email");
         requestWrapper.removeHeader("X-User-Name");
+        requestWrapper.removeHeader("X-User-Admin");
 
         // Obtém autenticação (se houver)
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -41,10 +42,13 @@ public class UserHeaderFilter extends OncePerRequestFilter {
             String userId = jwt.getClaimAsString("sub");
             String email = jwt.getClaimAsString("email");
             String username = jwt.getClaimAsString("preferred_username");
+            boolean isAdmin = jwtToken.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_GATEWAY_ADMIN".equals(authority.getAuthority()));
 
             if (userId != null) requestWrapper.addHeader("X-User-Id", userId);
             if (email != null) requestWrapper.addHeader("X-User-Email", email);
             if (username != null) requestWrapper.addHeader("X-User-Name", username);
+            requestWrapper.addHeader("X-User-Admin", Boolean.toString(isAdmin));
         }
 
         // Encaminha sempre o wrapper: sem autenticação, headers chegam nulos; com JWT, chegam preenchidos
