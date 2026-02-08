@@ -50,12 +50,26 @@ public class reservationController {
         return getSuccessListDataResponseResponseEntity(userId, paginationParams);
     }
 
+    @GetMapping("all")
+    public ResponseEntity<SuccessListDataResponse<ReservationResDTO>> getAllReservations(PaginationParams paginationParams) {
+
+        Page<ReservationResDTO> allReservations = reservationService.getAllReservation(paginationParams.toPageable());
+
+        if (allReservations.getContent().isEmpty()) return ResponseEntity.noContent().build();
+
+        return ResponseEntity.ok(new SuccessListDataResponse<ReservationResDTO>(allReservations.getContent(),
+                allReservations.getNumber(),
+                allReservations.getSize(),
+                allReservations.getTotalElements()));
+    }
+
 
 
 
 
     @NonNull
     private ResponseEntity<SuccessListDataResponse<ReservationResDTO>> getSuccessListDataResponseResponseEntity(@PathVariable String userId, PaginationParams paginationParams) {
+
         Page<ReservationResDTO> userReservations = reservationService.getUserReservation(UUID.fromString(userId), paginationParams.toPageable());
 
         if (userReservations.getContent().isEmpty()) return ResponseEntity.noContent().build();
