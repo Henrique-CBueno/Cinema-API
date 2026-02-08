@@ -52,6 +52,8 @@ cinema:
     lock-timeout: 300
 
 clients:
+  batch:
+    url: "http://localhost:8080/catalog/batch"
   catalog:
     url: "http://localhost:8080/catalog"
 
