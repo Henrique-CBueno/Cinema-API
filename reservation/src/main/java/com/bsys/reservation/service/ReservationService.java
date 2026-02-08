@@ -52,7 +52,7 @@ public class ReservationService {
             throw new SessionUnavailableException(ExceptionConstants.UNAVAIBLE_SESSION);
         }
 
-        SeatsExistenceResDTO resSeats = seatsClient.checkSeatsExistence(dto.cinemaId().toString(),
+        SeatsExistenceResDTO resSeats = seatsClient.checkSeatsExistence(session.cinemaId().toString(),
                 session.room().id().toString(),
                 dto.seats()).getBody();
 

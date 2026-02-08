@@ -1,6 +1,5 @@
 package com.bsys.reservation.clients.catalog;
 
-import com.bsys.reservation.clients.catalog.DTO.SeatBatchItemReqDTO;
 import com.bsys.reservation.clients.catalog.DTO.SeatResDTO;
 import com.bsys.reservation.clients.catalog.DTO.SeatsExistenceResDTO;
 import com.bsys.reservation.infra.padronize.SuccessListDataResponse;
@@ -27,9 +26,4 @@ public interface SeatsClient {
      ResponseEntity<SuccessResponse<SeatResDTO>> getSeatById(@PathVariable String cinemaId,
                                                              @PathVariable String roomId,
                                                              @PathVariable String seatId);
-
-    @PostMapping("cinemas/{cinemaId}/rooms/{roomId}/seats/batch")
-    ResponseEntity<SuccessListDataResponse<SeatResDTO>> getSeatsByIds(@PathVariable String cinemaId,
-                                                         @PathVariable String roomId,
-                                                         @RequestBody List<SeatBatchItemReqDTO> seatItems);
 }
