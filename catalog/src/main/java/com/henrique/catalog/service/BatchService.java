@@ -75,7 +75,8 @@ public class BatchService {
                     return new BatchResDTO(
                             dto.reserveId(),
                             session,
-                            seat
+                            seat,
+                            dto.userId()
                     );
                 })
                 .toList();

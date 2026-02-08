@@ -7,5 +7,6 @@ import java.util.UUID;
 
 public record BatchResDTO(UUID reservationId,
                           SessionResDTO sessionResDTO,
-                          SeatResDTO seatResDTO) {
+                          SeatResDTO seatResDTO,
+                          UUID userId) {
 }

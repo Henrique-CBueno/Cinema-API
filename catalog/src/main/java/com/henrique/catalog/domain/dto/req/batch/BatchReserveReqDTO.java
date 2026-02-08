@@ -4,5 +4,6 @@ import java.util.UUID;
 
 public record BatchReserveReqDTO(UUID reserveId,
                                  UUID sessionId,
-                                 UUID seatId) {
+                                 UUID seatId,
+                                 UUID userId) {
 }
