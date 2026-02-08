@@ -46,4 +46,17 @@ public interface ReservationRepository extends JpaRepository<Reservation, UUID> 
             @Param("newStatus") ReserveState newStatus);
 
     Page<Reservation> findAllByUserId(UUID userId, Pageable pageable);
+
+    @Modifying
+    @Transactional
+    @Query("""
+                UPDATE Reservation r
+                SET r.status = 'CANCELED'
+                WHERE r.id = :reservationId
+                AND r.status = 'CONFIRMED'
+                AND (:isAdmin = true OR r.userId = :userId)
+            """)
+    int cancelReservation(@Param("reservationId") UUID reservationId,
+                          @Param("userId") UUID userId,
+                          @Param("isAdmin") boolean isAdmin);
 }

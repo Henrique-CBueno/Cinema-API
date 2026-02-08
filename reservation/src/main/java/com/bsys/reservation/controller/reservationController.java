@@ -63,6 +63,18 @@ public class reservationController {
                 allReservations.getTotalElements()));
     }
 
+    @DeleteMapping("{id}")
+    public ResponseEntity<String> cancelReservation(@RequestHeader(value = "X-User-Id", required = false) String userId,
+                                                  @RequestHeader(value = "X-User-Admin", required = false) String isAdmin,
+                                                  @PathVariable UUID id) {
+
+        reservationService.cancelReservation(id,
+                UUID.fromString(userId),
+                Boolean.parseBoolean(isAdmin));
+
+        return ResponseEntity.noContent().build();
+    }
+
 
 
 

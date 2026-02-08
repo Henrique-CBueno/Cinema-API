@@ -106,6 +106,16 @@ public class ReservationService {
             return getReservationResDTOS(pageable, reservations);
         }
 
+        public void cancelReservation(UUID reservationId, UUID userId, Boolean isAdmin) {
+
+            int affectedRows = reservationRepository.cancelReservation(reservationId, userId, isAdmin);
+
+            if (affectedRows < 1) throw new ReservationsNotFound(String.format(
+                    ExceptionConstants.RESERVATIONS_WITH_ID_NOT_FOUND,
+                    reservationId
+            ));
+        }
+
 
 
     @NonNull
