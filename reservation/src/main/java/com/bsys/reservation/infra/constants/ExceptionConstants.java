@@ -7,4 +7,5 @@ public class ExceptionConstants {
     public static String SEAT_DONT_EXISTS_IN_ROOM = "esses assento nao existe na seçao %s";
     public static String RESERVATION_ALREADY_EXISTS = "Ja existe uma reserva para um ou mais assentos desta sessao";
     public static String SEAT_ALREADY_RESERVED = "Assento ja reservado para esta sessao";
+    public static String RESERVATIONS_NOT_FOUND = "Não foram achadas reservas";
 }

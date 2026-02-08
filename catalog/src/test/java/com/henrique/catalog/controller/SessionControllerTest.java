@@ -45,172 +45,175 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 class SessionControllerTest {
 
-    @Mock
-    private SessionService sessionService;
+        @Mock
+        private SessionService sessionService;
 
-    @InjectMocks
-    private SessionController sessionController;
+        @InjectMocks
+        private SessionController sessionController;
 
-    @Nested
-    class GetAllSession {
+        @Nested
+        class GetAllSession {
 
-        @Test
-        void shouldGetAllSessionsWithHttpOK() {
-            // Arrange
-            PaginationParams paginationParams = new PaginationParams(0, 5);
-            GetAllSessionParamsDTO filterParams = new GetAllSessionParamsDTO(null, null, null, null);
+                @Test
+                void shouldGetAllSessionsWithHttpOK() {
+                        // Arrange
+                        PaginationParams paginationParams = new PaginationParams(0, 5);
+                        GetAllSessionParamsDTO filterParams = new GetAllSessionParamsDTO(null, null, null, null);
 
-            doReturn(buildSessionPage())
-                    .when(sessionService)
-                    .getSessions(paginationParams.toPageable(), filterParams);
+                        doReturn(buildSessionPage())
+                                        .when(sessionService)
+                                        .getSessions(paginationParams.toPageable(), filterParams);
 
-            // Act
-            ResponseEntity<SuccessListDataResponse> response = sessionController.getAllSession(
-                    paginationParams,
-                    filterParams);
+                        // Act
+                        ResponseEntity<SuccessListDataResponse> response = sessionController.getAllSession(
+                                        paginationParams,
+                                        filterParams);
 
-            // Assert
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            verify(sessionService, times(1)).getSessions(paginationParams.toPageable(), filterParams);
+                        // Assert
+                        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+                        verify(sessionService, times(1)).getSessions(paginationParams.toPageable(), filterParams);
+                }
+
+                @Test
+                void shouldReturnNoContentWhenSessionsListIsEmpty() {
+                        // Arrange
+                        PaginationParams paginationParams = new PaginationParams(0, 5);
+                        GetAllSessionParamsDTO filterParams = new GetAllSessionParamsDTO(null, null, null, null);
+
+                        doReturn(new PageImpl<>(List.of()))
+                                        .when(sessionService)
+                                        .getSessions(paginationParams.toPageable(), filterParams);
+
+                        // Act
+                        ResponseEntity<SuccessListDataResponse> response = sessionController.getAllSession(
+                                        paginationParams,
+                                        filterParams);
+
+                        // Assert
+                        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+                        assertThat(response.getBody()).isNull();
+                        verify(sessionService, times(1)).getSessions(paginationParams.toPageable(), filterParams);
+                }
+
+                @Test
+                void shouldPassCorrectParametersToService() {
+                        // Arrange
+                        PaginationParams paginationParams = new PaginationParams(1, 10);
+                        GetAllSessionParamsDTO filterParams = new GetAllSessionParamsDTO(
+                                        UUID.randomUUID(),
+                                        UUID.randomUUID(),
+                                        UUID.randomUUID(),
+                                        LocalDate.of(2026, 2, 4));
+
+                        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+                        ArgumentCaptor<GetAllSessionParamsDTO> paramsCaptor = ArgumentCaptor
+                                        .forClass(GetAllSessionParamsDTO.class);
+
+                        doReturn(new PageImpl<>(List.of()))
+                                        .when(sessionService)
+                                        .getSessions(pageableCaptor.capture(), paramsCaptor.capture());
+
+                        // Act
+                        sessionController.getAllSession(paginationParams, filterParams);
+
+                        // Assert
+                        assertEquals(paginationParams.page(), pageableCaptor.getValue().getPageNumber());
+                        assertEquals(paginationParams.pageSize(), pageableCaptor.getValue().getPageSize());
+                        assertEquals(filterParams, paramsCaptor.getValue());
+                }
+
+                @Test
+                void shouldReturnResponseBodyCorrect() {
+                        // Arrange
+                        PaginationParams paginationParams = new PaginationParams(0, 5);
+                        GetAllSessionParamsDTO filterParams = new GetAllSessionParamsDTO(null, null, null, null);
+
+                        Page<SessionResDTO> returnedSessions = buildSessionPage();
+
+                        doReturn(returnedSessions)
+                                        .when(sessionService)
+                                        .getSessions(paginationParams.toPageable(), filterParams);
+
+                        var expectedResponse = ResponseEntity.ok(new SuccessListDataResponse(
+                                        returnedSessions.getContent(),
+                                        returnedSessions.getNumber(),
+                                        returnedSessions.getSize(),
+                                        returnedSessions.getTotalElements()));
+
+                        // Act
+                        ResponseEntity<SuccessListDataResponse> response = sessionController.getAllSession(
+                                        paginationParams,
+                                        filterParams);
+
+                        // Assert
+                        assertEquals(expectedResponse.getStatusCode(), response.getStatusCode());
+                        assertThat(response)
+                                        .usingRecursiveComparison()
+                                        .ignoringFields("body.timestamp")
+                                        .isEqualTo(expectedResponse);
+                }
         }
 
-        @Test
-        void shouldReturnNoContentWhenSessionsListIsEmpty() {
-            // Arrange
-            PaginationParams paginationParams = new PaginationParams(0, 5);
-            GetAllSessionParamsDTO filterParams = new GetAllSessionParamsDTO(null, null, null, null);
+        @Nested
+        class GetSessionById {
 
-            doReturn(new PageImpl<>(List.of()))
-                    .when(sessionService)
-                    .getSessions(paginationParams.toPageable(), filterParams);
+                @Test
+                void shouldReturnHttpOK() {
+                        // Arrange
+                        SessionResDTO session = buildSingleSession();
 
-            // Act
-            ResponseEntity<SuccessListDataResponse> response = sessionController.getAllSession(
-                    paginationParams,
-                    filterParams);
+                        doReturn(session)
+                                        .when(sessionService)
+                                        .getSessionById(any(UUID.class));
 
-            // Assert
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
-            assertThat(response.getBody()).isNull();
-            verify(sessionService, times(1)).getSessions(paginationParams.toPageable(), filterParams);
+                        // Act
+                        ResponseEntity<SuccessResponse> response = sessionController
+                                        .getSession(session.id().toString());
+
+                        // Assert
+                        assertEquals(HttpStatus.OK, response.getStatusCode());
+                        assertThat(response.getBody()).isNotNull();
+                }
+
+                @Test
+                void shouldPassCorrectParametersToService() {
+                        // Arrange
+                        UUID sessionId = UUID.randomUUID();
+                        SessionResDTO session = buildSingleSession();
+
+                        doReturn(session)
+                                        .when(sessionService)
+                                        .getSessionById(any(UUID.class));
+
+                        // Act
+                        sessionController.getSession(sessionId.toString());
+
+                        // Assert
+                        verify(sessionService, times(1)).getSessionById(sessionId);
+                }
+
+                @Test
+                void shouldReturnCorrectResponseBody() {
+                        // Arrange
+                        SessionResDTO session = buildSingleSession();
+                        var expectedResponse = ResponseEntity.ok(new SuccessResponse(session));
+
+                        doReturn(session)
+                                        .when(sessionService)
+                                        .getSessionById(any(UUID.class));
+
+                        // Act
+                        ResponseEntity<SuccessResponse> response = sessionController
+                                        .getSession(session.id().toString());
+
+                        // Assert
+                        assertEquals(expectedResponse.getStatusCode(), response.getStatusCode());
+                        assertThat(response)
+                                        .usingRecursiveComparison()
+                                        .ignoringFields("body.timestamp")
+                                        .isEqualTo(expectedResponse);
+                }
         }
-
-        @Test
-        void shouldPassCorrectParametersToService() {
-            // Arrange
-            PaginationParams paginationParams = new PaginationParams(1, 10);
-            GetAllSessionParamsDTO filterParams = new GetAllSessionParamsDTO(
-                    UUID.randomUUID(),
-                    UUID.randomUUID(),
-                    UUID.randomUUID(),
-                    LocalDate.of(2026, 2, 4));
-
-            ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
-            ArgumentCaptor<GetAllSessionParamsDTO> paramsCaptor = ArgumentCaptor.forClass(GetAllSessionParamsDTO.class);
-
-            doReturn(new PageImpl<>(List.of()))
-                    .when(sessionService)
-                    .getSessions(pageableCaptor.capture(), paramsCaptor.capture());
-
-            // Act
-            sessionController.getAllSession(paginationParams, filterParams);
-
-            // Assert
-            assertEquals(paginationParams.page(), pageableCaptor.getValue().getPageNumber());
-            assertEquals(paginationParams.pageSize(), pageableCaptor.getValue().getPageSize());
-            assertEquals(filterParams, paramsCaptor.getValue());
-        }
-
-        @Test
-        void shouldReturnResponseBodyCorrect() {
-            // Arrange
-            PaginationParams paginationParams = new PaginationParams(0, 5);
-            GetAllSessionParamsDTO filterParams = new GetAllSessionParamsDTO(null, null, null, null);
-
-            Page<SessionResDTO> returnedSessions = buildSessionPage();
-
-            doReturn(returnedSessions)
-                    .when(sessionService)
-                    .getSessions(paginationParams.toPageable(), filterParams);
-
-            var expectedResponse = ResponseEntity.ok(new SuccessListDataResponse(
-                    returnedSessions.getContent(),
-                    returnedSessions.getNumber(),
-                    returnedSessions.getSize(),
-                    returnedSessions.getTotalElements()));
-
-            // Act
-            ResponseEntity<SuccessListDataResponse> response = sessionController.getAllSession(
-                    paginationParams,
-                    filterParams);
-
-            // Assert
-            assertEquals(expectedResponse.getStatusCode(), response.getStatusCode());
-            assertThat(response)
-                    .usingRecursiveComparison()
-                    .ignoringFields("body.timestamp")
-                    .isEqualTo(expectedResponse);
-        }
-    }
-
-    @Nested
-    class GetSessionById {
-
-        @Test
-        void shouldReturnHttpOK() {
-            // Arrange
-            SessionResDTO session = buildSingleSession();
-
-            doReturn(session)
-                    .when(sessionService)
-                    .getSessionById(any(UUID.class));
-
-            // Act
-            ResponseEntity<SuccessResponse> response = sessionController.getSession(session.id().toString());
-
-            // Assert
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertThat(response.getBody()).isNotNull();
-        }
-
-        @Test
-        void shouldPassCorrectParametersToService() {
-            // Arrange
-            UUID sessionId = UUID.randomUUID();
-            SessionResDTO session = buildSingleSession();
-
-            doReturn(session)
-                    .when(sessionService)
-                    .getSessionById(any(UUID.class));
-
-            // Act
-            sessionController.getSession(sessionId.toString());
-
-            // Assert
-            verify(sessionService, times(1)).getSessionById(sessionId);
-        }
-
-        @Test
-        void shouldReturnCorrectResponseBody() {
-            // Arrange
-            SessionResDTO session = buildSingleSession();
-            var expectedResponse = ResponseEntity.ok(new SuccessResponse(session));
-
-            doReturn(session)
-                    .when(sessionService)
-                    .getSessionById(any(UUID.class));
-
-            // Act
-            ResponseEntity<SuccessResponse> response = sessionController.getSession(session.id().toString());
-
-            // Assert
-            assertEquals(expectedResponse.getStatusCode(), response.getStatusCode());
-            assertThat(response)
-                    .usingRecursiveComparison()
-                    .ignoringFields("body.timestamp")
-                    .isEqualTo(expectedResponse);
-        }
-    }
 
         @Nested
         class CreateSession {
@@ -228,8 +231,7 @@ class SessionControllerTest {
                                         UUID.randomUUID(),
                                         UUID.randomUUID(),
                                         LocalDateTime.of(2026, 2, 4, 14, 0),
-                                        new BigDecimal("30.00")
-                        );
+                                        new BigDecimal("30.00"));
                         String userId = UUID.randomUUID().toString();
 
                         doReturn(createdId)
@@ -261,8 +263,7 @@ class SessionControllerTest {
                                         UUID.randomUUID(),
                                         UUID.randomUUID(),
                                         LocalDateTime.of(2026, 2, 4, 14, 0),
-                                        new BigDecimal("30.00")
-                        );
+                                        new BigDecimal("30.00"));
 
                         doReturn(createdId)
                                         .when(sessionService)
@@ -289,9 +290,9 @@ class SessionControllerTest {
                         UUID roomId = UUID.randomUUID();
                         UUID sessionId = UUID.randomUUID();
 
-                            doNothing()
-                                    .when(sessionService)
-                                    .cancelSession(cinemaId, roomId, sessionId);
+                        doNothing()
+                                        .when(sessionService)
+                                        .cancelSession(cinemaId, roomId, sessionId);
 
                         // Act
                         ResponseEntity<Void> response = sessionController.deleteSeat(
@@ -310,9 +311,9 @@ class SessionControllerTest {
                         UUID roomId = UUID.randomUUID();
                         UUID sessionId = UUID.randomUUID();
 
-                            doNothing()
-                                    .when(sessionService)
-                                    .cancelSession(any(UUID.class), any(UUID.class), any(UUID.class));
+                        doNothing()
+                                        .when(sessionService)
+                                        .cancelSession(any(UUID.class), any(UUID.class), any(UUID.class));
 
                         // Act
                         sessionController.deleteSeat(cinemaId.toString(), roomId.toString(), sessionId.toString());
@@ -328,15 +329,16 @@ class SessionControllerTest {
                         UUID roomId = UUID.randomUUID();
                         UUID sessionId = UUID.randomUUID();
 
-                            doNothing()
-                                    .when(sessionService)
-                                    .cancelSession(any(UUID.class), any(UUID.class), any(UUID.class));
+                        doNothing()
+                                        .when(sessionService)
+                                        .cancelSession(any(UUID.class), any(UUID.class), any(UUID.class));
 
                         // Act
                         sessionController.deleteSeat(cinemaId.toString(), roomId.toString(), sessionId.toString());
 
                         // Assert
-                        verify(sessionService, times(1)).cancelSession(any(UUID.class), any(UUID.class), any(UUID.class));
+                        verify(sessionService, times(1)).cancelSession(any(UUID.class), any(UUID.class),
+                                        any(UUID.class));
                 }
 
                 @Test
@@ -347,48 +349,49 @@ class SessionControllerTest {
                         UUID sessionId1 = UUID.randomUUID();
                         UUID sessionId2 = UUID.randomUUID();
 
-                            doNothing()
-                                    .when(sessionService)
-                                    .cancelSession(any(UUID.class), any(UUID.class), any(UUID.class));
+                        doNothing()
+                                        .when(sessionService)
+                                        .cancelSession(any(UUID.class), any(UUID.class), any(UUID.class));
 
                         // Act
                         sessionController.deleteSeat(cinemaId.toString(), roomId.toString(), sessionId1.toString());
                         sessionController.deleteSeat(cinemaId.toString(), roomId.toString(), sessionId2.toString());
 
                         // Assert
-                        verify(sessionService, times(2)).cancelSession(any(UUID.class), any(UUID.class), any(UUID.class));
+                        verify(sessionService, times(2)).cancelSession(any(UUID.class), any(UUID.class),
+                                        any(UUID.class));
                 }
         }
 
-    private Page<SessionResDTO> buildSessionPage() {
-        MovieResDTO movie = MovieFactory.createMovieResponseDTO(UUID.randomUUID(), "Matrix");
-        RoomsResDTO room = RoomFactory.createRoomsResponseDTO(UUID.randomUUID(), "Sala 1");
+        private Page<SessionResDTO> buildSessionPage() {
+                MovieResDTO movie = MovieFactory.createMovieResponseDTO(UUID.randomUUID(), "Matrix");
+                RoomsResDTO room = RoomFactory.createRoomsResponseDTO(UUID.randomUUID(), "Sala 1");
 
-        SessionResDTO session = new SessionResDTO(
-                UUID.randomUUID(),
-                movie,
-                room,
-                room.cinema().id(),
-                LocalDateTime.of(2026, 2, 4, 14, 0),
-                LocalDateTime.of(2026, 2, 4, 16, 0),
-                new BigDecimal("30.00"),
-                SessionStatus.SCHEDULED);
+                SessionResDTO session = new SessionResDTO(
+                                UUID.randomUUID(),
+                                movie,
+                                room,
+                                room.cinema().id(),
+                                LocalDateTime.of(2026, 2, 4, 14, 0),
+                                LocalDateTime.of(2026, 2, 4, 16, 0),
+                                new BigDecimal("30.00"),
+                                SessionStatus.SCHEDULED);
 
-        return new PageImpl<>(List.of(session));
-    }
+                return new PageImpl<>(List.of(session));
+        }
 
-    private SessionResDTO buildSingleSession() {
-        MovieResDTO movie = MovieFactory.createMovieResponseDTO(UUID.randomUUID(), "Matrix");
-        RoomsResDTO room = RoomFactory.createRoomsResponseDTO(UUID.randomUUID(), "Sala 1");
+        private SessionResDTO buildSingleSession() {
+                MovieResDTO movie = MovieFactory.createMovieResponseDTO(UUID.randomUUID(), "Matrix");
+                RoomsResDTO room = RoomFactory.createRoomsResponseDTO(UUID.randomUUID(), "Sala 1");
 
-        return new SessionResDTO(
-                UUID.randomUUID(),
-                movie,
-                room,
-                room.cinema().id(),
-                LocalDateTime.of(2026, 2, 4, 14, 0),
-                LocalDateTime.of(2026, 2, 4, 16, 0),
-                new BigDecimal("30.00"),
-                SessionStatus.SCHEDULED);
-    }
+                return new SessionResDTO(
+                                UUID.randomUUID(),
+                                movie,
+                                room,
+                                room.cinema().id(),
+                                LocalDateTime.of(2026, 2, 4, 14, 0),
+                                LocalDateTime.of(2026, 2, 4, 16, 0),
+                                new BigDecimal("30.00"),
+                                SessionStatus.SCHEDULED);
+        }
 }

@@ -41,11 +41,11 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class SessionServiceTest {
 
-    @Mock
-    private SessionRepository sessionRepository;
+        @Mock
+        private SessionRepository sessionRepository;
 
-    @Mock
-    private SessionMapper sessionMapper;
+        @Mock
+        private SessionMapper sessionMapper;
 
         @Mock
         private MovieService movieService;
@@ -53,365 +53,365 @@ class SessionServiceTest {
         @Mock
         private RoomsService roomsService;
 
-    @InjectMocks
-    private SessionService sessionService;
+        @InjectMocks
+        private SessionService sessionService;
 
-    @Nested
-    class GetSessions {
+        @Nested
+        class GetSessions {
 
-        @Test
-        void shouldReturnPageOfSessionsWhenSessionsExist() {
-            // Arrange
-            Pageable pageable = Pageable.ofSize(10);
-            GetAllSessionParamsDTO params = new GetAllSessionParamsDTO(null, null, null, null);
+                @Test
+                void shouldReturnPageOfSessionsWhenSessionsExist() {
+                        // Arrange
+                        Pageable pageable = Pageable.ofSize(10);
+                        GetAllSessionParamsDTO params = new GetAllSessionParamsDTO(null, null, null, null);
 
-            MovieEntity movieEntity = MovieFactory.createMovieEntity();
-            RoomEntity roomEntity = RoomFactory.createRoomEntity();
+                        MovieEntity movieEntity = MovieFactory.createMovieEntity();
+                        RoomEntity roomEntity = RoomFactory.createRoomEntity();
 
-            SessionEntity session1 = buildSession(UUID.randomUUID(), movieEntity, roomEntity,
-                    LocalDateTime.of(2026, 2, 4, 14, 0),
-                    LocalDateTime.of(2026, 2, 4, 16, 0),
-                    new BigDecimal("30.00"),
-                    SessionStatus.SCHEDULED);
+                        SessionEntity session1 = buildSession(UUID.randomUUID(), movieEntity, roomEntity,
+                                        LocalDateTime.of(2026, 2, 4, 14, 0),
+                                        LocalDateTime.of(2026, 2, 4, 16, 0),
+                                        new BigDecimal("30.00"),
+                                        SessionStatus.SCHEDULED);
 
-            SessionEntity session2 = buildSession(UUID.randomUUID(), movieEntity, roomEntity,
-                    LocalDateTime.of(2026, 2, 4, 18, 0),
-                    LocalDateTime.of(2026, 2, 4, 20, 0),
-                    new BigDecimal("40.00"),
-                    SessionStatus.SCHEDULED);
+                        SessionEntity session2 = buildSession(UUID.randomUUID(), movieEntity, roomEntity,
+                                        LocalDateTime.of(2026, 2, 4, 18, 0),
+                                        LocalDateTime.of(2026, 2, 4, 20, 0),
+                                        new BigDecimal("40.00"),
+                                        SessionStatus.SCHEDULED);
 
-            Page<SessionEntity> entityPage = new PageImpl<>(List.of(session1, session2));
+                        Page<SessionEntity> entityPage = new PageImpl<>(List.of(session1, session2));
 
-            SessionResDTO dto1 = new SessionResDTO(session1.getId(), null, null,
-                    roomEntity.getCinema().getId(),
-                    session1.getStartTime(), session1.getEndTime(), session1.getPrice(), session1.getStatus());
-            SessionResDTO dto2 = new SessionResDTO(session2.getId(), null, null,
-                    roomEntity.getCinema().getId(),
-                    session2.getStartTime(), session2.getEndTime(), session2.getPrice(), session2.getStatus());
+                        SessionResDTO dto1 = new SessionResDTO(session1.getId(), null, null,
+                                        roomEntity.getCinema().getId(),
+                                        session1.getStartTime(), session1.getEndTime(), session1.getPrice(),
+                                        session1.getStatus());
+                        SessionResDTO dto2 = new SessionResDTO(session2.getId(), null, null,
+                                        roomEntity.getCinema().getId(),
+                                        session2.getStartTime(), session2.getEndTime(), session2.getPrice(),
+                                        session2.getStatus());
 
-            when(sessionRepository.findSessionsWithFilters(any(), any(), any(), any(), any(), any(), any()))
-                    .thenReturn(entityPage);
-            when(sessionMapper.toDTO(session1)).thenReturn(dto1);
-            when(sessionMapper.toDTO(session2)).thenReturn(dto2);
+                        when(sessionRepository.findSessionsWithFilters(any(), any(), any(), any(), any(), any(), any()))
+                                        .thenReturn(entityPage);
+                        when(sessionMapper.toDTO(session1)).thenReturn(dto1);
+                        when(sessionMapper.toDTO(session2)).thenReturn(dto2);
 
-            // Act
-            Page<SessionResDTO> result = sessionService.getSessions(pageable, params);
+                        // Act
+                        Page<SessionResDTO> result = sessionService.getSessions(pageable, params);
 
-            // Assert
-            assertNotNull(result);
-            assertEquals(2, result.getTotalElements());
-            assertEquals(dto1, result.getContent().getFirst());
-            verify(sessionRepository, times(1)).findSessionsWithFilters(
-                    eq(null), eq(null), eq(null), eq(null), eq(null), eq(null), eq(pageable));
-            verify(sessionMapper, times(2)).toDTO(any(SessionEntity.class));
+                        // Assert
+                        assertNotNull(result);
+                        assertEquals(2, result.getTotalElements());
+                        assertEquals(dto1, result.getContent().getFirst());
+                        verify(sessionRepository, times(1)).findSessionsWithFilters(
+                                        eq(null), eq(null), eq(null), eq(null), eq(null), eq(null), eq(pageable));
+                        verify(sessionMapper, times(2)).toDTO(any(SessionEntity.class));
+                }
+
+                @Test
+                void shouldReturnEmptyPageWhenNoSessionsExist() {
+                        // Arrange
+                        Pageable pageable = Pageable.ofSize(10);
+                        GetAllSessionParamsDTO params = new GetAllSessionParamsDTO(null, null, null, null);
+
+                        Page<SessionEntity> emptyPage = new PageImpl<>(List.of());
+
+                        when(sessionRepository.findSessionsWithFilters(any(), any(), any(), any(), any(), any(), any()))
+                                        .thenReturn(emptyPage);
+
+                        // Act
+                        Page<SessionResDTO> result = sessionService.getSessions(pageable, params);
+
+                        // Assert
+                        assertNotNull(result);
+                        assertTrue(result.getContent().isEmpty());
+                        verify(sessionRepository, times(1)).findSessionsWithFilters(
+                                        eq(null), eq(null), eq(null), eq(null), eq(null), eq(null), eq(pageable));
+                        verify(sessionMapper, never()).toDTO(any());
+                }
+
+                @Test
+                void shouldCalculateStartAndEndOfDayWhenDateProvided() {
+                        // Arrange
+                        Pageable pageable = Pageable.ofSize(10);
+                        UUID movieId = UUID.randomUUID();
+                        UUID cinemaId = UUID.randomUUID();
+                        UUID roomId = UUID.randomUUID();
+                        LocalDate date = LocalDate.of(2026, 2, 4);
+
+                        GetAllSessionParamsDTO params = new GetAllSessionParamsDTO(movieId, cinemaId, roomId, date);
+                        Page<SessionEntity> emptyPage = new PageImpl<>(List.of());
+
+                        when(sessionRepository.findSessionsWithFilters(any(), any(), any(), any(), any(), any(), any()))
+                                        .thenReturn(emptyPage);
+
+                        ArgumentCaptor<LocalDateTime> startCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+                        ArgumentCaptor<LocalDateTime> endCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+
+                        // Act
+                        sessionService.getSessions(pageable, params);
+
+                        // Assert
+                        verify(sessionRepository, times(1)).findSessionsWithFilters(
+                                        eq(movieId), eq(cinemaId), eq(roomId), eq(date),
+                                        startCaptor.capture(), endCaptor.capture(), eq(pageable));
+
+                        assertEquals(date.atStartOfDay(), startCaptor.getValue());
+                        assertEquals(date.atTime(LocalTime.MAX), endCaptor.getValue());
+                }
+
+                @Test
+                void shouldPassNullStartAndEndOfDayWhenDateIsNull() {
+                        // Arrange
+                        Pageable pageable = Pageable.ofSize(10);
+                        GetAllSessionParamsDTO params = new GetAllSessionParamsDTO(null, null, null, null);
+
+                        Page<SessionEntity> emptyPage = new PageImpl<>(List.of());
+
+                        when(sessionRepository.findSessionsWithFilters(any(), any(), any(), any(), any(), any(), any()))
+                                        .thenReturn(emptyPage);
+
+                        ArgumentCaptor<LocalDateTime> startCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+                        ArgumentCaptor<LocalDateTime> endCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+
+                        // Act
+                        sessionService.getSessions(pageable, params);
+
+                        // Assert
+                        verify(sessionRepository, times(1)).findSessionsWithFilters(
+                                        eq(null), eq(null), eq(null), eq(null),
+                                        startCaptor.capture(), endCaptor.capture(), eq(pageable));
+
+                        assertNull(startCaptor.getValue());
+                        assertNull(endCaptor.getValue());
+                }
         }
 
-        @Test
-        void shouldReturnEmptyPageWhenNoSessionsExist() {
-            // Arrange
-            Pageable pageable = Pageable.ofSize(10);
-            GetAllSessionParamsDTO params = new GetAllSessionParamsDTO(null, null, null, null);
+        @Nested
+        class GetSessionById {
 
-            Page<SessionEntity> emptyPage = new PageImpl<>(List.of());
+                @Test
+                void shouldReturnSessionWhenExists() {
+                        // Arrange
+                        UUID sessionId = UUID.randomUUID();
 
-            when(sessionRepository.findSessionsWithFilters(any(), any(), any(), any(), any(), any(), any()))
-                    .thenReturn(emptyPage);
+                        MovieEntity movieEntity = MovieFactory.createMovieEntity();
+                        RoomEntity roomEntity = RoomFactory.createRoomEntity();
 
-            // Act
-            Page<SessionResDTO> result = sessionService.getSessions(pageable, params);
+                        SessionEntity sessionEntity = buildSession(sessionId, movieEntity, roomEntity,
+                                        LocalDateTime.of(2026, 2, 4, 14, 0),
+                                        LocalDateTime.of(2026, 2, 4, 16, 0),
+                                        new BigDecimal("30.00"),
+                                        SessionStatus.SCHEDULED);
 
-            // Assert
-            assertNotNull(result);
-            assertTrue(result.getContent().isEmpty());
-            verify(sessionRepository, times(1)).findSessionsWithFilters(
-                    eq(null), eq(null), eq(null), eq(null), eq(null), eq(null), eq(pageable));
-            verify(sessionMapper, never()).toDTO(any());
+                        SessionResDTO dto = new SessionResDTO(sessionId, null, null,
+                                        roomEntity.getCinema().getId(),
+                                        sessionEntity.getStartTime(), sessionEntity.getEndTime(),
+                                        sessionEntity.getPrice(), sessionEntity.getStatus());
+
+                        when(sessionRepository.findById(sessionId))
+                                        .thenReturn(Optional.of(sessionEntity));
+                        when(sessionMapper.toDTO(sessionEntity))
+                                        .thenReturn(dto);
+
+                        // Act
+                        SessionResDTO result = sessionService.getSessionById(sessionId);
+
+                        // Assert
+                        assertNotNull(result);
+                        assertEquals(dto, result);
+                        verify(sessionRepository, times(1)).findById(sessionId);
+                        verify(sessionMapper, times(1)).toDTO(sessionEntity);
+                }
+
+                @Test
+                void shouldThrowNotFoundExceptionWhenSessionDoesNotExist() {
+                        // Arrange
+                        UUID sessionId = UUID.randomUUID();
+
+                        when(sessionRepository.findById(sessionId))
+                                        .thenReturn(Optional.empty());
+
+                        // Act & Assert
+                        NotFoundException exception = assertThrows(NotFoundException.class,
+                                        () -> sessionService.getSessionById(sessionId));
+
+                        assertEquals(String.format(ExceptionsConstants.SESSION_DONT_EXISTS, sessionId),
+                                        exception.getMessage());
+                        verify(sessionRepository, times(1)).findById(sessionId);
+                        verify(sessionMapper, never()).toDTO(any());
+                }
         }
 
-        @Test
-        void shouldCalculateStartAndEndOfDayWhenDateProvided() {
-            // Arrange
-            Pageable pageable = Pageable.ofSize(10);
-            UUID movieId = UUID.randomUUID();
-            UUID cinemaId = UUID.randomUUID();
-            UUID roomId = UUID.randomUUID();
-            LocalDate date = LocalDate.of(2026, 2, 4);
+        @Nested
+        class CreateNewSession {
 
-            GetAllSessionParamsDTO params = new GetAllSessionParamsDTO(movieId, cinemaId, roomId, date);
-            Page<SessionEntity> emptyPage = new PageImpl<>(List.of());
+                @Test
+                void shouldCreateSessionSuccessfully() {
+                        // Arrange
+                        UUID userId = UUID.randomUUID();
+                        UUID movieId = UUID.randomUUID();
+                        UUID cinemaId = UUID.randomUUID();
+                        UUID roomId = UUID.randomUUID();
+                        LocalDateTime startTime = LocalDateTime.of(2026, 2, 4, 14, 0);
 
-            when(sessionRepository.findSessionsWithFilters(any(), any(), any(), any(), any(), any(), any()))
-                    .thenReturn(emptyPage);
+                        MovieEntity movieEntity = MovieFactory.createMovieEntity(movieId, "Matrix");
+                        movieEntity.setDurationMinutes(120);
+                        RoomEntity roomEntity = RoomFactory.createRoomEntity(roomId, "Sala 1");
 
-            ArgumentCaptor<LocalDateTime> startCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
-            ArgumentCaptor<LocalDateTime> endCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+                        var dto = new com.henrique.catalog.domain.dto.req.sessions.CreateSessionReqDTO(
+                                        movieId,
+                                        roomId,
+                                        cinemaId,
+                                        startTime,
+                                        new BigDecimal("30.00"));
 
-            // Act
-            sessionService.getSessions(pageable, params);
+                        SessionEntity sessionEntity = new SessionEntity();
+                        UUID createdId = UUID.randomUUID();
+                        sessionEntity.setId(createdId);
 
-            // Assert
-            verify(sessionRepository, times(1)).findSessionsWithFilters(
-                    eq(movieId), eq(cinemaId), eq(roomId), eq(date),
-                    startCaptor.capture(), endCaptor.capture(), eq(pageable));
+                        when(movieService.getMovieByIdReturningEntity(movieId))
+                                        .thenReturn(movieEntity);
+                        when(roomsService.getRoomByCinemaIdAndRoomIdReturningEntity(cinemaId, roomId))
+                                        .thenReturn(roomEntity);
+                        when(sessionMapper.toEntity(dto, movieEntity, roomEntity, userId))
+                                        .thenReturn(sessionEntity);
+                        when(sessionRepository.saveAndFlush(sessionEntity))
+                                        .thenReturn(sessionEntity);
 
-            assertEquals(date.atStartOfDay(), startCaptor.getValue());
-            assertEquals(date.atTime(LocalTime.MAX), endCaptor.getValue());
+                        // Act
+                        UUID result = sessionService.createNewSession(dto, userId);
+
+                        // Assert
+                        assertNotNull(result);
+                        assertEquals(createdId, result);
+                        verify(movieService, times(1)).getMovieByIdReturningEntity(movieId);
+                        verify(roomsService, times(1)).getRoomByCinemaIdAndRoomIdReturningEntity(cinemaId, roomId);
+                        verify(sessionMapper, times(1)).toEntity(dto, movieEntity, roomEntity, userId);
+                        verify(sessionRepository, times(1)).saveAndFlush(sessionEntity);
+                }
+
+                @Test
+                void shouldThrowDuplicateResourceExceptionWhenSessionTimeConflicts() {
+                        // Arrange
+                        UUID userId = UUID.randomUUID();
+                        UUID movieId = UUID.randomUUID();
+                        UUID cinemaId = UUID.randomUUID();
+                        UUID roomId = UUID.randomUUID();
+
+                        MovieEntity movieEntity = MovieFactory.createMovieEntity(movieId, "Matrix");
+                        RoomEntity roomEntity = RoomFactory.createRoomEntity(roomId, "Sala 1");
+
+                        var dto = new com.henrique.catalog.domain.dto.req.sessions.CreateSessionReqDTO(
+                                        movieId,
+                                        roomId,
+                                        cinemaId,
+                                        LocalDateTime.of(2026, 2, 4, 14, 0),
+                                        new BigDecimal("30.00"));
+
+                        SessionEntity sessionEntity = new SessionEntity();
+
+                        when(movieService.getMovieByIdReturningEntity(movieId))
+                                        .thenReturn(movieEntity);
+                        when(roomsService.getRoomByCinemaIdAndRoomIdReturningEntity(cinemaId, roomId))
+                                        .thenReturn(roomEntity);
+                        when(sessionMapper.toEntity(dto, movieEntity, roomEntity, userId))
+                                        .thenReturn(sessionEntity);
+                        when(sessionRepository.saveAndFlush(sessionEntity))
+                                        .thenThrow(new DataIntegrityViolationException("Duplicate"));
+
+                        // Act & Assert
+                        DuplicateResourceException exception = assertThrows(DuplicateResourceException.class,
+                                        () -> sessionService.createNewSession(dto, userId));
+
+                        assertEquals(ExceptionsConstants.SESSION_IN_THIS_TIME, exception.getMessage());
+                        verify(sessionRepository, times(1)).saveAndFlush(sessionEntity);
+                }
         }
 
-        @Test
-        void shouldPassNullStartAndEndOfDayWhenDateIsNull() {
-            // Arrange
-            Pageable pageable = Pageable.ofSize(10);
-            GetAllSessionParamsDTO params = new GetAllSessionParamsDTO(null, null, null, null);
+        @Nested
+        class SafeDeleteSession {
 
-            Page<SessionEntity> emptyPage = new PageImpl<>(List.of());
+                @Test
+                void shouldDeleteSessionSuccessfullyWhenAffectedRowsIsGreaterThanZero() {
+                        // Arrange
+                        UUID cinemaId = UUID.randomUUID();
+                        UUID roomId = UUID.randomUUID();
+                        UUID sessionId = UUID.randomUUID();
 
-            when(sessionRepository.findSessionsWithFilters(any(), any(), any(), any(), any(), any(), any()))
-                    .thenReturn(emptyPage);
+                        when(sessionRepository.softDeleteById(sessionId, roomId, cinemaId))
+                                        .thenReturn(1);
 
-            ArgumentCaptor<LocalDateTime> startCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
-            ArgumentCaptor<LocalDateTime> endCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+                        // Act
+                        sessionService.cancelSession(cinemaId, roomId, sessionId);
 
-            // Act
-            sessionService.getSessions(pageable, params);
+                        // Assert
+                        verify(sessionRepository, times(1)).softDeleteById(sessionId, roomId, cinemaId);
+                }
 
-            // Assert
-            verify(sessionRepository, times(1)).findSessionsWithFilters(
-                    eq(null), eq(null), eq(null), eq(null),
-                    startCaptor.capture(), endCaptor.capture(), eq(pageable));
+                @Test
+                void shouldThrowNotFoundExceptionWhenAffectedRowsIsZero() {
+                        // Arrange
+                        UUID cinemaId = UUID.randomUUID();
+                        UUID roomId = UUID.randomUUID();
+                        UUID sessionId = UUID.randomUUID();
 
-            assertNull(startCaptor.getValue());
-            assertNull(endCaptor.getValue());
-        }
-    }
+                        when(sessionRepository.softDeleteById(sessionId, roomId, cinemaId))
+                                        .thenReturn(0);
 
-    @Nested
-    class GetSessionById {
+                        // Act & Assert
+                        assertThrows(NotFoundException.class,
+                                        () -> sessionService.cancelSession(cinemaId, roomId, sessionId));
+                        verify(sessionRepository, times(1)).softDeleteById(sessionId, roomId, cinemaId);
+                }
 
-        @Test
-        void shouldReturnSessionWhenExists() {
-            // Arrange
-            UUID sessionId = UUID.randomUUID();
+                @Test
+                void shouldIncludeSessionIdInExceptionMessage() {
+                        // Arrange
+                        UUID cinemaId = UUID.randomUUID();
+                        UUID roomId = UUID.randomUUID();
+                        UUID sessionId = UUID.randomUUID();
 
-            MovieEntity movieEntity = MovieFactory.createMovieEntity();
-            RoomEntity roomEntity = RoomFactory.createRoomEntity();
+                        when(sessionRepository.softDeleteById(sessionId, roomId, cinemaId))
+                                        .thenReturn(0);
 
-            SessionEntity sessionEntity = buildSession(sessionId, movieEntity, roomEntity,
-                    LocalDateTime.of(2026, 2, 4, 14, 0),
-                    LocalDateTime.of(2026, 2, 4, 16, 0),
-                    new BigDecimal("30.00"),
-                    SessionStatus.SCHEDULED);
+                        // Act & Assert
+                        NotFoundException exception = assertThrows(NotFoundException.class,
+                                        () -> sessionService.cancelSession(cinemaId, roomId, sessionId));
+                        assertTrue(exception.getMessage().contains(sessionId.toString()));
+                }
 
-            SessionResDTO dto = new SessionResDTO(sessionId, null, null,
-                    roomEntity.getCinema().getId(),
-                    sessionEntity.getStartTime(), sessionEntity.getEndTime(),
-                    sessionEntity.getPrice(), sessionEntity.getStatus());
+                @Test
+                void shouldThrowNotFoundExceptionWhenAffectedRowsIsNegative() {
+                        // Arrange
+                        UUID cinemaId = UUID.randomUUID();
+                        UUID roomId = UUID.randomUUID();
+                        UUID sessionId = UUID.randomUUID();
 
-            when(sessionRepository.findById(sessionId))
-                    .thenReturn(Optional.of(sessionEntity));
-            when(sessionMapper.toDTO(sessionEntity))
-                    .thenReturn(dto);
+                        when(sessionRepository.softDeleteById(sessionId, roomId, cinemaId))
+                                        .thenReturn(-1);
 
-            // Act
-            SessionResDTO result = sessionService.getSessionById(sessionId);
-
-            // Assert
-            assertNotNull(result);
-            assertEquals(dto, result);
-            verify(sessionRepository, times(1)).findById(sessionId);
-            verify(sessionMapper, times(1)).toDTO(sessionEntity);
-        }
-
-        @Test
-        void shouldThrowNotFoundExceptionWhenSessionDoesNotExist() {
-            // Arrange
-            UUID sessionId = UUID.randomUUID();
-
-            when(sessionRepository.findById(sessionId))
-                    .thenReturn(Optional.empty());
-
-            // Act & Assert
-            NotFoundException exception = assertThrows(NotFoundException.class,
-                    () -> sessionService.getSessionById(sessionId));
-
-            assertEquals(String.format(ExceptionsConstants.SESSION_DONT_EXISTS, sessionId),
-                    exception.getMessage());
-            verify(sessionRepository, times(1)).findById(sessionId);
-            verify(sessionMapper, never()).toDTO(any());
-        }
-    }
-
-    @Nested
-    class CreateNewSession {
-
-        @Test
-        void shouldCreateSessionSuccessfully() {
-            // Arrange
-            UUID userId = UUID.randomUUID();
-            UUID movieId = UUID.randomUUID();
-            UUID cinemaId = UUID.randomUUID();
-            UUID roomId = UUID.randomUUID();
-            LocalDateTime startTime = LocalDateTime.of(2026, 2, 4, 14, 0);
-
-            MovieEntity movieEntity = MovieFactory.createMovieEntity(movieId, "Matrix");
-            movieEntity.setDurationMinutes(120);
-            RoomEntity roomEntity = RoomFactory.createRoomEntity(roomId, "Sala 1");
-
-            var dto = new com.henrique.catalog.domain.dto.req.sessions.CreateSessionReqDTO(
-                    movieId,
-                    roomId,
-                    cinemaId,
-                    startTime,
-                    new BigDecimal("30.00")
-            );
-
-            SessionEntity sessionEntity = new SessionEntity();
-            UUID createdId = UUID.randomUUID();
-            sessionEntity.setId(createdId);
-
-            when(movieService.getMovieByIdReturningEntity(movieId))
-                    .thenReturn(movieEntity);
-            when(roomsService.getRoomByCinemaIdAndRoomIdReturningEntity(cinemaId, roomId))
-                    .thenReturn(roomEntity);
-            when(sessionMapper.toEntity(dto, movieEntity, roomEntity, userId))
-                    .thenReturn(sessionEntity);
-            when(sessionRepository.saveAndFlush(sessionEntity))
-                    .thenReturn(sessionEntity);
-
-            // Act
-            UUID result = sessionService.createNewSession(dto, userId);
-
-            // Assert
-            assertNotNull(result);
-            assertEquals(createdId, result);
-            verify(movieService, times(1)).getMovieByIdReturningEntity(movieId);
-            verify(roomsService, times(1)).getRoomByCinemaIdAndRoomIdReturningEntity(cinemaId, roomId);
-            verify(sessionMapper, times(1)).toEntity(dto, movieEntity, roomEntity, userId);
-            verify(sessionRepository, times(1)).saveAndFlush(sessionEntity);
+                        // Act & Assert
+                        assertThrows(NotFoundException.class,
+                                        () -> sessionService.cancelSession(cinemaId, roomId, sessionId));
+                }
         }
 
-        @Test
-        void shouldThrowDuplicateResourceExceptionWhenSessionTimeConflicts() {
-            // Arrange
-            UUID userId = UUID.randomUUID();
-            UUID movieId = UUID.randomUUID();
-            UUID cinemaId = UUID.randomUUID();
-            UUID roomId = UUID.randomUUID();
-
-            MovieEntity movieEntity = MovieFactory.createMovieEntity(movieId, "Matrix");
-            RoomEntity roomEntity = RoomFactory.createRoomEntity(roomId, "Sala 1");
-
-            var dto = new com.henrique.catalog.domain.dto.req.sessions.CreateSessionReqDTO(
-                    movieId,
-                    roomId,
-                    cinemaId,
-                    LocalDateTime.of(2026, 2, 4, 14, 0),
-                    new BigDecimal("30.00")
-            );
-
-            SessionEntity sessionEntity = new SessionEntity();
-
-            when(movieService.getMovieByIdReturningEntity(movieId))
-                    .thenReturn(movieEntity);
-            when(roomsService.getRoomByCinemaIdAndRoomIdReturningEntity(cinemaId, roomId))
-                    .thenReturn(roomEntity);
-            when(sessionMapper.toEntity(dto, movieEntity, roomEntity, userId))
-                    .thenReturn(sessionEntity);
-            when(sessionRepository.saveAndFlush(sessionEntity))
-                    .thenThrow(new DataIntegrityViolationException("Duplicate"));
-
-            // Act & Assert
-            DuplicateResourceException exception = assertThrows(DuplicateResourceException.class,
-                    () -> sessionService.createNewSession(dto, userId));
-
-            assertEquals(ExceptionsConstants.SESSION_IN_THIS_TIME, exception.getMessage());
-            verify(sessionRepository, times(1)).saveAndFlush(sessionEntity);
+        private SessionEntity buildSession(UUID id,
+                        MovieEntity movie,
+                        RoomEntity room,
+                        LocalDateTime start,
+                        LocalDateTime end,
+                        BigDecimal price,
+                        SessionStatus status) {
+                SessionEntity session = new SessionEntity();
+                session.setId(id);
+                session.setMovie(movie);
+                session.setRoom(room);
+                session.setStartTime(start);
+                session.setEndTime(end);
+                session.setPrice(price);
+                session.setStatus(status);
+                return session;
         }
-    }
-
-    @Nested
-    class SafeDeleteSession {
-
-        @Test
-        void shouldDeleteSessionSuccessfullyWhenAffectedRowsIsGreaterThanZero() {
-            // Arrange
-            UUID cinemaId = UUID.randomUUID();
-            UUID roomId = UUID.randomUUID();
-            UUID sessionId = UUID.randomUUID();
-
-            when(sessionRepository.softDeleteById(sessionId, roomId, cinemaId))
-                    .thenReturn(1);
-
-            // Act
-            sessionService.cancelSession(cinemaId, roomId, sessionId);
-
-            // Assert
-            verify(sessionRepository, times(1)).softDeleteById(sessionId, roomId, cinemaId);
-        }
-
-        @Test
-        void shouldThrowNotFoundExceptionWhenAffectedRowsIsZero() {
-            // Arrange
-            UUID cinemaId = UUID.randomUUID();
-            UUID roomId = UUID.randomUUID();
-            UUID sessionId = UUID.randomUUID();
-
-            when(sessionRepository.softDeleteById(sessionId, roomId, cinemaId))
-                    .thenReturn(0);
-
-            // Act & Assert
-            assertThrows(NotFoundException.class,
-                    () -> sessionService.cancelSession(cinemaId, roomId, sessionId));
-            verify(sessionRepository, times(1)).softDeleteById(sessionId, roomId, cinemaId);
-        }
-
-        @Test
-        void shouldIncludeSessionIdInExceptionMessage() {
-            // Arrange
-            UUID cinemaId = UUID.randomUUID();
-            UUID roomId = UUID.randomUUID();
-            UUID sessionId = UUID.randomUUID();
-
-            when(sessionRepository.softDeleteById(sessionId, roomId, cinemaId))
-                    .thenReturn(0);
-
-            // Act & Assert
-            NotFoundException exception = assertThrows(NotFoundException.class,
-                    () -> sessionService.cancelSession(cinemaId, roomId, sessionId));
-            assertTrue(exception.getMessage().contains(sessionId.toString()));
-        }
-
-        @Test
-        void shouldThrowNotFoundExceptionWhenAffectedRowsIsNegative() {
-            // Arrange
-            UUID cinemaId = UUID.randomUUID();
-            UUID roomId = UUID.randomUUID();
-            UUID sessionId = UUID.randomUUID();
-
-            when(sessionRepository.softDeleteById(sessionId, roomId, cinemaId))
-                    .thenReturn(-1);
-
-            // Act & Assert
-            assertThrows(NotFoundException.class,
-                    () -> sessionService.cancelSession(cinemaId, roomId, sessionId));
-        }
-    }
-
-    private SessionEntity buildSession(UUID id,
-            MovieEntity movie,
-            RoomEntity room,
-            LocalDateTime start,
-            LocalDateTime end,
-            BigDecimal price,
-            SessionStatus status) {
-        SessionEntity session = new SessionEntity();
-        session.setId(id);
-        session.setMovie(movie);
-        session.setRoom(room);
-        session.setStartTime(start);
-        session.setEndTime(end);
-        session.setPrice(price);
-        session.setStatus(status);
-        return session;
-    }
 }

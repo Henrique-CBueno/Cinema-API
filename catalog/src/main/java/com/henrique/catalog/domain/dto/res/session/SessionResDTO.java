@@ -9,11 +9,11 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record SessionResDTO(UUID id,
-                            MovieResDTO movie,
-                            RoomsResDTO room,
-                            UUID cinemaId,
-                            LocalDateTime startTime,
-                            LocalDateTime endTime,
-                            BigDecimal price,
-                            SessionStatus status) {
+        MovieResDTO movie,
+        RoomsResDTO room,
+        UUID cinemaId,
+        LocalDateTime startTime,
+        LocalDateTime endTime,
+        BigDecimal price,
+        SessionStatus status) {
 }

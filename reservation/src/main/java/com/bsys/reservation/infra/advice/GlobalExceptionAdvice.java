@@ -1,10 +1,6 @@
 package com.bsys.reservation.infra.advice;
 
-import com.bsys.reservation.infra.exceptions.ReservationPersistenceException;
-import com.bsys.reservation.infra.exceptions.SessionUnavailableException;
-import com.bsys.reservation.infra.exceptions.SeatAlreadyReservedException;
-import com.bsys.reservation.infra.exceptions.SeatDontExistsException;
-import com.bsys.reservation.infra.exceptions.SeatUnavailableException;
+import com.bsys.reservation.infra.exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -40,6 +36,12 @@ public class GlobalExceptionAdvice {
     @ExceptionHandler(SeatAlreadyReservedException.class)
     public ResponseEntity<FeignExceptionAdvice.ErrorResponse> assentoJaReservado(SeatAlreadyReservedException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                new FeignExceptionAdvice.ErrorResponse(HttpStatus.CONFLICT.toString(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(ReservationsNotFound.class)
+    public ResponseEntity<FeignExceptionAdvice.ErrorResponse> reservasNaoExistem(ReservationsNotFound ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                 new FeignExceptionAdvice.ErrorResponse(HttpStatus.CONFLICT.toString(), ex.getMessage()));
     }
 }

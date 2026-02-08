@@ -151,8 +151,7 @@ class SessionMapperTest {
                     roomId,
                     cinemaId,
                     startTime,
-                    price
-            );
+                    price);
 
             // Act
             SessionEntity entity = sessionMapper.toEntity(dto, movie, room, userId);

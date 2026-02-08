@@ -1,8 +1,13 @@
 package com.bsys.reservation.clients.catalog;
 
+import com.bsys.reservation.clients.catalog.DTO.SeatBatchItemReqDTO;
+import com.bsys.reservation.clients.catalog.DTO.SeatResDTO;
 import com.bsys.reservation.clients.catalog.DTO.SeatsExistenceResDTO;
+import com.bsys.reservation.infra.padronize.SuccessListDataResponse;
+import com.bsys.reservation.infra.padronize.SuccessResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,4 +22,14 @@ public interface SeatsClient {
     ResponseEntity<SeatsExistenceResDTO> checkSeatsExistence(@PathVariable String cinemaId,
                                                              @PathVariable String roomId,
                                                              @RequestBody List<UUID> seatIds);
+
+    @GetMapping("cinemas/{cinemaId}/rooms/{roomId}/seats/{seatId}")
+     ResponseEntity<SuccessResponse<SeatResDTO>> getSeatById(@PathVariable String cinemaId,
+                                                             @PathVariable String roomId,
+                                                             @PathVariable String seatId);
+
+    @PostMapping("cinemas/{cinemaId}/rooms/{roomId}/seats/batch")
+    ResponseEntity<SuccessListDataResponse<SeatResDTO>> getSeatsByIds(@PathVariable String cinemaId,
+                                                         @PathVariable String roomId,
+                                                         @RequestBody List<SeatBatchItemReqDTO> seatItems);
 }

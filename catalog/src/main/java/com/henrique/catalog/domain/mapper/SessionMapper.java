@@ -13,8 +13,7 @@ import org.mapstruct.MappingTarget;
 
 import java.util.UUID;
 
-
-@Mapper(componentModel = "spring", uses = {MovieMapper.class, RoomsMapper.class})
+@Mapper(componentModel = "spring", uses = { MovieMapper.class, RoomsMapper.class })
 public interface SessionMapper {
 
     @Mapping(source = "room.cinema.id", target = "cinemaId")
@@ -27,14 +26,14 @@ public interface SessionMapper {
     @Mapping(target = "endTime", ignore = true)
     @Mapping(target = "createdByUserId", source = "createdByUserId")
     SessionEntity toEntity(CreateSessionReqDTO dto,
-                           MovieEntity movie,
-                           RoomEntity room,
-                           UUID createdByUserId);
+            MovieEntity movie,
+            RoomEntity room,
+            UUID createdByUserId);
 
     @AfterMapping
     default void calculateEndTimeAndStatus(@MappingTarget SessionEntity entity,
-                                           CreateSessionReqDTO dto,
-                                           MovieEntity movie) {
+            CreateSessionReqDTO dto,
+            MovieEntity movie) {
 
         entity.setEndTime(dto.startTime().plusMinutes(movie.getDurationMinutes()));
         entity.setStatus(SessionStatus.SCHEDULED);
