@@ -1,10 +1,7 @@
 package com.bsys.reservation.service;
 
 import com.bsys.reservation.clients.catalog.BatchClient;
-import com.bsys.reservation.clients.catalog.DTO.BatchResDTO;
-import com.bsys.reservation.clients.catalog.DTO.BatchReserveReqDTO;
-import com.bsys.reservation.clients.catalog.DTO.SeatsExistenceResDTO;
-import com.bsys.reservation.clients.catalog.DTO.SessionResDTO;
+import com.bsys.reservation.clients.catalog.DTO.*;
 import com.bsys.reservation.clients.catalog.SeatsClient;
 import com.bsys.reservation.clients.catalog.SessionClient;
 import com.bsys.reservation.domain.dto.res.ReservationResDTO;
@@ -57,7 +54,7 @@ public class ReservationService {
                                 .getBody())
                                 .data();
 
-                if (session.startTime() == null || !session.startTime().isAfter(LocalDateTime.now())) {
+                if (session.startTime() == null || !session.startTime().isAfter(LocalDateTime.now()) || session.status() != SessionStatus.SCHEDULED) {
                         throw new SessionUnavailableException(ExceptionConstants.UNAVAIBLE_SESSION);
                 }
 
