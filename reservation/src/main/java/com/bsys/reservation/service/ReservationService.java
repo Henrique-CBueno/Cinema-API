@@ -70,10 +70,10 @@ public class ReservationService {
                                         resSeats.missingSeatIds()));
                 }
 
-                boolean seetIsntReservedYet = reservationRepository.noConfirmedReservationExists(dto.sessionId(),
+                boolean seatIsntReservedYet = reservationRepository.noConfirmedReservationExists(dto.sessionId(),
                                 dto.seats());
 
-                if (!seetIsntReservedYet) {
+                if (!seatIsntReservedYet) {
                         throw new SeatAlreadyReservedException(ExceptionConstants.SEAT_ALREADY_RESERVED);
                 }
 
