@@ -1,0 +1,26 @@
+{
+  "frequency": "ONE_TIME",
+  "methods": [
+    "PIX"
+  ],
+  "products": [
+    {
+      "externalId": "PROD-001",
+      "name": "Consultoria Premium",
+      "description": "Pacote de horas de desenvolvimento",
+      "quantity": 1,
+      "price": 5000
+    },
+    {
+      "externalId": "PROD-002",
+      "name": "Taxa de Setup",
+      "description": "Configuração inicial do ambiente",
+      "quantity": 1,
+      "price": 1500
+    }
+  ],
+  "expiresIn": 3600,
+  "returnUrl": "https://henriquebueno.com",
+  "completionUrl": "https://henriquebueno.com",
+  "externalId": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+}

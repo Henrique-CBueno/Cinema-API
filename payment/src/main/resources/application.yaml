@@ -42,3 +42,4 @@ integration:
   payment:
     url: ${PAYMENT_URL:http://teste.com}
     api-key: ${PAYMENT_API_KEY:API_KEY}
+

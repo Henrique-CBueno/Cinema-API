@@ -22,7 +22,7 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                         
                         // Documentação dos microsserviços - permitir acesso público
-                        .requestMatchers("/catalog/v3/api-docs/**", "/reservation/v3/api-docs/**", "/hello/v3/api-docs/**").permitAll()
+                        .requestMatchers("/catalog/v3/api-docs/**", "/reservation/v3/api-docs/**", "/payment/v3/api-docs/**").permitAll()
 
                         // Operações administrativas do catálogo - requerem GATEWAY_ADMIN
                         .requestMatchers(HttpMethod.POST, "/catalog/movies").hasRole("GATEWAY_ADMIN")
