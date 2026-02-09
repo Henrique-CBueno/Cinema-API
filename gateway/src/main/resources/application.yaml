@@ -27,6 +27,13 @@ spring:
               filters:
                 - TokenRelay=
 
+            - id: customer
+              uri: lb://customer
+              predicates:
+                - Path=/customer/**
+              filters:
+                - TokenRelay=
+
   security:
     oauth2:
       client:
@@ -56,6 +63,8 @@ springdoc:
         url: /reservation/v3/api-docs
       - name: payment-service
         url: /payment/v3/api-docs
+      - name: customers-service
+        url: /customer/v3/api-docs
     oauth2-redirect-url: http://localhost:8080/swagger-ui/oauth2-redirect.html
     oauth:
       client-id: swagger

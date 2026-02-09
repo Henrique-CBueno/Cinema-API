@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: customer
+
+eureka:
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: false
+  oauth:
+    client-id: swagger
+    scopes: openid, profile, email
+  # Força todas as requisições do Swagger a serem feitas via gateway
+  override-with-generic-response: false
+
+server:
+  port: 0
+  servlet:
+    context-path: /customer
+  # Configura o servidor público como sendo o gateway
+  forward-headers-strategy: framework
+
+feign:
+  clients:
+    keycloak:
+      url: http://localhost:9090
+      realm: auth
+      client-id: admin-service
+      client-secret: MfmtHK7OPWOGaboMWSAp2nGSgs4O9PUX
