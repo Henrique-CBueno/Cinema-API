@@ -31,7 +31,7 @@ public class RegistrationService {
         req.setEmail(email);
         req.setEnabled(true);
         req.setEmailVerified(false);
-        req.setRequiredActions(List.of("VERIFY_EMAIL"));
+        req.setRequiredActions(List.of("VERIFY_EMAIL", "UPDATE_PROFILE", "UPDATE_PASSWORD"));
 
         Response response = adminFeign.createUser(realm, req);
         String userId = extractUserId(response);
