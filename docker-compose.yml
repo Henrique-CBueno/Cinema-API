@@ -64,3 +64,12 @@ services:
     command: redis-server --notify-keyspace-events Ex
     ports:
       - "6379:6379"
+
+  mongo:
+    image: mongo:7
+    container_name: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: customer_db

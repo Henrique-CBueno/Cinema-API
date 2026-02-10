@@ -2,13 +2,18 @@ package com.bsys.custumers.service;
 
 import com.bsys.custumers.client.KeycloakAdminFeign;
 import com.bsys.custumers.domain.dto.req.CreateKeycloakUserRequest;
+import com.bsys.custumers.domain.dto.req.RegisterRequest;
+import com.bsys.custumers.domain.entity.Customer;
+import com.bsys.custumers.repository.CustomerRepository;
 import feign.Response;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -16,19 +21,21 @@ import java.util.List;
 public class RegistrationService {
 
     private final KeycloakAdminFeign adminFeign;
+    private final CustomerRepository customerRepository;
 
     @Value("${feign.clients.keycloak.realm}")
     private String realm;
 
-    public String register(String email) {
+    @Transactional
+    public String register(RegisterRequest dto) {
 
-        if (email == null || email.isBlank()) {
+        if (dto.getEmail() == null || dto.getEmail().isBlank()) {
             throw new IllegalArgumentException("Email is required");
         }
 
         var req = new CreateKeycloakUserRequest();
-        req.setUsername(email);
-        req.setEmail(email);
+        req.setUsername(dto.getEmail());
+        req.setEmail(dto.getEmail());
         req.setEnabled(true);
         req.setEmailVerified(false);
         req.setRequiredActions(List.of("VERIFY_EMAIL", "UPDATE_PROFILE", "UPDATE_PASSWORD"));
@@ -36,10 +43,21 @@ public class RegistrationService {
         Response response = adminFeign.createUser(realm, req);
         String userId = extractUserId(response);
 
+        Customer newCustomer = new Customer();
+        mapNewCustomerMongo(dto, newCustomer, userId);
+        customerRepository.save(newCustomer);
+
         Response verifyEmailResponse = adminFeign.sendVerifyEmail(realm, userId);
         validateVerifyEmailResponse(verifyEmailResponse);
 
         return userId;
+    }
+
+    private static void mapNewCustomerMongo(RegisterRequest dto, Customer newCustomer, String userId) {
+        newCustomer.setKeycloakUserId(userId);
+        newCustomer.setPhone(dto.getPhone());
+        newCustomer.setTaxId(dto.getTaxId());
+        newCustomer.setCreatedAt(Instant.now());
     }
 
     private String extractUserId(Response response) {

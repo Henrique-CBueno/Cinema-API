@@ -45,11 +45,15 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/reservation/{userId}").hasRole("GATEWAY_ADMIN")
                         .requestMatchers(HttpMethod.GET, "/reservation/all").hasRole("GATEWAY_ADMIN")
+                        
+                        .requestMatchers("/customer/internal/**").denyAll()
 
                         .requestMatchers("/hello/**").hasRole("GATEWAY_ADMIN")
                         .requestMatchers("/catalog/**").permitAll()
                         .requestMatchers("/reservation/**").authenticated()
-                        .requestMatchers("/customer/register").permitAll()
+                        .requestMatchers("/customer/**").permitAll()
+
+
 
                         .anyRequest().authenticated()
                 )

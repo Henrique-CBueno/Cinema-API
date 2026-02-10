@@ -1,6 +1,11 @@
 spring:
   application:
     name: customer
+  mongodb:
+    uri: mongodb://localhost:27017/customer_db
+  data:
+    mongodb:
+      auto-index-creation: true
 
 eureka:
   instance:

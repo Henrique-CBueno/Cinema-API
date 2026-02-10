@@ -12,4 +12,6 @@ import lombok.Setter;
 public class RegisterRequest {
 
     private String email;
+    private String taxId;
+    private String phone;
 }
