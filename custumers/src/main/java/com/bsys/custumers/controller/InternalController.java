@@ -1,14 +1,12 @@
 package com.bsys.custumers.controller;
 
+import com.bsys.custumers.domain.dto.req.UpdateCustomerIdDTO;
 import com.bsys.custumers.domain.entity.Customer;
 import com.bsys.custumers.infra.padronize.SuccessResponse;
 import com.bsys.custumers.service.InternalService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("internal/customers")
@@ -22,5 +20,13 @@ public class InternalController {
 
         Customer customer = internalService.findById(customerId);
         return ResponseEntity.ok(new SuccessResponse<>(customer));
+    }
+
+    @PostMapping("updateCustomerId/{userId}")
+    public ResponseEntity<Void> updateCustomerId(@PathVariable String userId,
+                                                 @RequestBody UpdateCustomerIdDTO dto) {
+
+        internalService.updateCustomerId(dto, userId);
+        return ResponseEntity.ok().build();
     }
 }
