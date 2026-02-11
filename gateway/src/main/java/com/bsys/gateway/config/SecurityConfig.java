@@ -45,7 +45,7 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/reservation/{userId}").hasRole("GATEWAY_ADMIN")
                         .requestMatchers(HttpMethod.GET, "/reservation/all").hasRole("GATEWAY_ADMIN")
-                        
+
                         .requestMatchers("/customer/internal/**").denyAll()
 
                         .requestMatchers("/hello/**").hasRole("GATEWAY_ADMIN")

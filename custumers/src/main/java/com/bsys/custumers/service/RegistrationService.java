@@ -54,6 +54,8 @@ public class RegistrationService {
     }
 
     private static void mapNewCustomerMongo(RegisterRequest dto, Customer newCustomer, String userId) {
+        newCustomer.setEmail(dto.getEmail());
+        newCustomer.setName(dto.getEmail());
         newCustomer.setKeycloakUserId(userId);
         newCustomer.setPhone(dto.getPhone());
         newCustomer.setTaxId(dto.getTaxId());

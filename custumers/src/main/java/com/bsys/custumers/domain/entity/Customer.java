@@ -23,6 +23,10 @@ public class Customer {
     @Indexed(unique = true)
     private String keycloakUserId;
 
+    private String name;
+
+    private String email;
+
     private String phone;
 
     @Indexed(unique = true)
