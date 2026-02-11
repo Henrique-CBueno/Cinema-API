@@ -25,6 +25,8 @@ public record BillingRequestDTO(@NotBlank
                                 @NotBlank @Pattern(regexp = "https?://.*")
                                 String completionUrl,
 
+                                String customerId,
+
                                 UUID externalId) {
 
     public record Product(

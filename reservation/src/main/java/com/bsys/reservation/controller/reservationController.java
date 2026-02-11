@@ -1,9 +1,11 @@
 package com.bsys.reservation.controller;
 
+import com.bsys.reservation.clients.payment.dto.BillingSuccessResponse;
 import com.bsys.reservation.domain.dto.global.PaginationParams;
 import com.bsys.reservation.domain.dto.req.CreateReservationDTO;
 import com.bsys.reservation.domain.dto.res.ReservationResDTO;
 import com.bsys.reservation.infra.padronize.SuccessListDataResponse;
+import com.bsys.reservation.infra.padronize.SuccessResponse;
 import com.bsys.reservation.service.ReservationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,16 +26,16 @@ public class reservationController {
     private final ReservationService reservationService;
 
     @PostMapping()
-    public ResponseEntity<UUID> makeReservation(@RequestBody @Valid CreateReservationDTO dto,
+    public ResponseEntity<SuccessResponse<BillingSuccessResponse>> makeReservation(@RequestBody @Valid CreateReservationDTO dto,
 
-            @RequestHeader(value = "X-User-Email", required = false) String email,
-            @RequestHeader(value = "X-User-Name", required = false) String username,
-            @RequestHeader(value = "X-User-Id", required = false) String userId) {
+                                                                                  @RequestHeader(value = "X-User-Email", required = false) String email,
+                                                                                  @RequestHeader(value = "X-User-Name", required = false) String username,
+                                                                                  @RequestHeader(value = "X-User-Id", required = false) String userId) {
 
-        return ResponseEntity.ok(reservationService.createReservation(dto,
+        return ResponseEntity.ok(new SuccessResponse<>(reservationService.createReservation(dto,
                 email,
                 username,
-                userId));
+                userId)));
     }
 
     @GetMapping()

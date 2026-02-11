@@ -1,5 +1,6 @@
 package com.bsys.reservation.domain.entity;
 
+import com.bsys.reservation.domain.entity.enums.ReserveState;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,6 +24,10 @@ public class Seats {
 
     @Column(name = "session_id", nullable = false)
     private UUID sessionId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ReserveState status;
 
     private UUID seatId;
 }

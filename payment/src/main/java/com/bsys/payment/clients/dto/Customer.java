@@ -1,22 +1,32 @@
 package com.bsys.payment.clients.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.annotation.Id;
 
 import java.time.Instant;
 
-public record Customer(String id,
+@Setter
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
+public class Customer {
 
-                        String keycloakUserId,
+    private String id;
 
-                        String name,
+    private String keycloakUserId;
 
-                        String email,
+    private String name;
 
-                        String phone,
+    private String email;
 
-                        String customerId,
+    private String phone;
 
-                        String taxId,
+    private String customerId;
 
-                        Instant createdAt) {
+    private String taxId;
+
+    private Instant createdAt;
 }

@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 public interface PaymentClient {
 
     @PostMapping("/billing/create")
-    Object createBilling(BillingRequestDTO dto);
+    BillingSuccessResponse createBilling(BillingRequestDTO dto);
 
     @PostMapping("/customer/create")
     CustomerSuccessData createCustomer(CustomerClientDTO dto);
