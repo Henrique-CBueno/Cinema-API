@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -26,8 +27,8 @@ public class Reservation {
     @Column(name = "session_id", nullable = false)
     UUID sessionId;
 
-    @Column(name = "seat_id", nullable = false)
-    UUID seatId;
+    @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL)
+    List<Seats> seats;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

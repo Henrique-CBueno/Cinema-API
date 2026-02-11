@@ -17,46 +17,47 @@ import java.util.UUID;
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, UUID> {
 
-    @Query("""
-                SELECT CASE\s
-                WHEN COUNT(r) = 0 THEN true
-                ELSE false
-                END
-                FROM Reservation r
-                WHERE r.sessionId = :sessionId
-                AND r.seatId IN :seatIds
-                AND r.status = com.bsys.reservation.domain.entity.enums.ReserveState.CONFIRMED
-            """)
-    boolean noConfirmedReservationExists(
-            @Param("sessionId") UUID sessionId,
-            @Param("seatIds") List<UUID> seatIds);
+        @Query("""
+                            SELECT CASE\s
+                            WHEN COUNT(r) = 0 THEN true
+                            ELSE false
+                            END
+                            FROM Reservation r
+                            JOIN r.seats s
+                            WHERE r.sessionId = :sessionId
+                            AND s.seatId IN :seatIds
+                            AND r.status = com.bsys.reservation.domain.entity.enums.ReserveState.CONFIRMED
+                        """)
+        boolean noConfirmedReservationExists(
+                        @Param("sessionId") UUID sessionId,
+                        @Param("seatIds") List<UUID> seatIds);
 
-    @Modifying
-    @Transactional
-    @Query("""
-                UPDATE Reservation r
-                SET r.status = :newStatus
-                WHERE r.sessionId = :sessionId
-                AND r.seatId = :seatId
-                AND r.status = :currentStatus
-            """)
-    int updateReservationStatus(@Param("sessionId") UUID sessionId,
-            @Param("seatId") UUID seatId,
-            @Param("currentStatus") ReserveState currentStatus,
-            @Param("newStatus") ReserveState newStatus);
+        @Modifying
+        @Transactional
+        @Query("""
+                            UPDATE Reservation r
+                            SET r.status = :newStatus
+                            WHERE r.sessionId = :sessionId
+                            AND EXISTS (SELECT s FROM r.seats s WHERE s.seatId = :seatId)
+                            AND r.status = :currentStatus
+                        """)
+        int updateReservationStatus(@Param("sessionId") UUID sessionId,
+                        @Param("seatId") UUID seatId,
+                        @Param("currentStatus") ReserveState currentStatus,
+                        @Param("newStatus") ReserveState newStatus);
 
-    Page<Reservation> findAllByUserId(UUID userId, Pageable pageable);
+        Page<Reservation> findAllByUserId(UUID userId, Pageable pageable);
 
-    @Modifying
-    @Transactional
-    @Query("""
-                UPDATE Reservation r
-                SET r.status = 'CANCELED'
-                WHERE r.id = :reservationId
-                AND r.status = 'CONFIRMED'
-                AND (:isAdmin = true OR r.userId = :userId)
-            """)
-    int cancelReservation(@Param("reservationId") UUID reservationId,
-                          @Param("userId") UUID userId,
-                          @Param("isAdmin") boolean isAdmin);
+        @Modifying
+        @Transactional
+        @Query("""
+                            UPDATE Reservation r
+                            SET r.status = 'CANCELED'
+                            WHERE r.id = :reservationId
+                            AND r.status = 'CONFIRMED'
+                            AND (:isAdmin = true OR r.userId = :userId)
+                        """)
+        int cancelReservation(@Param("reservationId") UUID reservationId,
+                        @Param("userId") UUID userId,
+                        @Param("isAdmin") boolean isAdmin);
 }

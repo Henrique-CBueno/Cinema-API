@@ -4,8 +4,10 @@ import com.bsys.reservation.clients.catalog.BatchClient;
 import com.bsys.reservation.clients.catalog.DTO.*;
 import com.bsys.reservation.clients.catalog.SeatsClient;
 import com.bsys.reservation.clients.catalog.SessionClient;
+import com.bsys.reservation.clients.payment.PaymentClient;
 import com.bsys.reservation.domain.dto.res.ReservationResDTO;
 import com.bsys.reservation.domain.entity.Reservation;
+import com.bsys.reservation.domain.entity.Seats;
 import com.bsys.reservation.domain.entity.enums.ReserveState;
 import com.bsys.reservation.domain.dto.req.CreateReservationDTO;
 import com.bsys.reservation.infra.constants.ExceptionConstants;
@@ -27,6 +29,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -41,6 +44,7 @@ public class ReservationService {
         private final RedisService redisService;
         private final ReservationRepository reservationRepository;
         private final BatchClient batchClient;
+        private final PaymentClient paymentClient;
 
         @Transactional
         public UUID createReservation(CreateReservationDTO dto,
@@ -78,100 +82,122 @@ public class ReservationService {
                         throw new SeatAlreadyReservedException(ExceptionConstants.SEAT_ALREADY_RESERVED);
                 }
 
-                List<Reservation> reservations = buildPendingReservations(dto, seatIds, userId);
-                List<Reservation> saved;
+                Reservation reservation = buildPendingReservation(dto, seatIds, userId);
+                Reservation saved;
                 try {
-                        saved = reservationRepository.saveAll(reservations);
+                        saved = reservationRepository.save(reservation);
                 } catch (DataIntegrityViolationException ex) {
                         throw new ReservationPersistenceException(ExceptionConstants.RESERVATION_ALREADY_EXISTS, ex);
                 }
 
                 lockSeatsOrFail(dto.sessionId(), seatIds, userId);
 
-                return saved.getFirst().getId();
+//                paymentClient.createBilling()
+
+                return saved.getId();
         }
 
         public Page<ReservationResDTO> getUserReservation(UUID userId,
                         Pageable pageable) {
 
-            Page<Reservation> reservations = reservationRepository.findAllByUserId(userId, pageable);
+                Page<Reservation> reservations = reservationRepository.findAllByUserId(userId, pageable);
 
-            return getReservationResDTOS(pageable, reservations);
+                return getReservationResDTOS(pageable, reservations);
         }
 
         public Page<ReservationResDTO> getAllReservation(Pageable pageable) {
 
-            Page<Reservation> reservations = reservationRepository.findAll(pageable);
+                Page<Reservation> reservations = reservationRepository.findAll(pageable);
 
-            return getReservationResDTOS(pageable, reservations);
+                return getReservationResDTOS(pageable, reservations);
         }
 
         public void cancelReservation(UUID reservationId, UUID userId, Boolean isAdmin) {
 
-            int affectedRows = reservationRepository.cancelReservation(reservationId, userId, isAdmin);
+                int affectedRows = reservationRepository.cancelReservation(reservationId, userId, isAdmin);
 
             if (affectedRows < 1) throw new ReservationsNotFound(String.format(
-                    ExceptionConstants.RESERVATIONS_WITH_ID_NOT_FOUND,
+                                        ExceptionConstants.RESERVATIONS_WITH_ID_NOT_FOUND,
                     reservationId
             ));
         }
 
 
 
-    @NonNull
-    private Page<ReservationResDTO> getReservationResDTOS(Pageable pageable, Page<Reservation> reservations) {
+        @NonNull
+        private Page<ReservationResDTO> getReservationResDTOS(Pageable pageable, Page<Reservation> reservations) {
         if (reservations.isEmpty()) return Page.empty(pageable);
 
-        List<Reservation> reservationsContent = reservations.getContent();
+                List<Reservation> reservationsContent = reservations.getContent();
+                List<BatchReserveReqDTO> batchRequests = new ArrayList<>();
 
-        List<BatchReserveReqDTO> batchReserveReqDTOS = reservationsContent
-                            .stream()
-                            .map(
-                                            reservation ->
-                                                     new BatchReserveReqDTO(
-                                                             reservation.getId(),
-                                                             reservation.getSessionId(),
-                                                             reservation.getSeatId(),
-                                                             reservation.getUserId())
-                                            )
-                            .toList();
+                for (Reservation r : reservationsContent) {
+                        if (r.getSeats() != null) {
+                                for (Seats s : r.getSeats()) {
+                                        batchRequests.add(new BatchReserveReqDTO(
+                                                        r.getId(),
+                                                        r.getSessionId(),
+                                                        s.getSeatId(),
+                                                        r.getUserId()));
+                                }
+                        }
+                }
 
-        List<BatchResDTO> reservesBatch = Optional
-                        .ofNullable(batchClient.getReservesBatch(batchReserveReqDTOS).getBody())
-                        .map(SuccessResponse::data)
-                        .orElseThrow(() -> new ReservationsNotFound(ExceptionConstants.RESERVATIONS_NOT_FOUND));
+                if (batchRequests.isEmpty()) {
+                        return Page.empty(pageable);
+                }
 
+                List<BatchResDTO> reservesBatch = Optional
+                                .ofNullable(batchClient.getReservesBatch(batchRequests).getBody())
+                                .map(SuccessResponse::data)
+                                .orElse(Collections.emptyList());
 
-        Map<UUID, ReserveState> statusMap = reservationsContent.stream()
-                            .collect(Collectors.toMap(
-                                            Reservation::getId,
-                                            Reservation::getStatus,
-                                            (a, _) -> a)
-                            );
+                Map<UUID, List<BatchResDTO>> groupedByReservation = reservesBatch.stream()
+                                .collect(Collectors.groupingBy(BatchResDTO::reservationId));
 
-        List<ReservationResDTO> listReservationRes = reservesBatch.stream().map(
-                reserveBatch -> {
+                List<ReservationResDTO> listReservationRes = reservationsContent.stream().map(
+                                r -> {
+                                        List<BatchResDTO> batches = groupedByReservation.getOrDefault(r.getId(),
+                                                        Collections.emptyList());
 
-                    ReserveState status = statusMap.getOrDefault(reserveBatch.reservationId(), ReserveState.CANCELED); // Default para o codigo nao quebrar se for null
-                    String seat = reserveBatch.seatResDTO().rowLabel() + reserveBatch.seatResDTO().columnNumber();
+                                        String title = "Unknown";
+                                        LocalDateTime start = null;
+                                        LocalDateTime end = null;
+                                        BigDecimal unitPrice = BigDecimal.ZERO;
 
-                    return new ReservationResDTO(
-                            reserveBatch.reservationId(),
-                            reserveBatch.sessionResDTO().movie().title(),
-                            status.toString(),
-                            reserveBatch.sessionResDTO().startTime(),
-                            reserveBatch.sessionResDTO().endTime(),
-                            seat,
-                            reserveBatch.userId());
-                }).toList();
+                                        if (!batches.isEmpty()) {
+                                                BatchResDTO first = batches.get(0);
+                                                title = first.sessionResDTO().movie().title();
+                                                start = first.sessionResDTO().startTime();
+                                                end = first.sessionResDTO().endTime();
+                                                unitPrice = first.sessionResDTO().price();
+                                        }
 
-        return new PageImpl<>(listReservationRes,
-                pageable,
-                reservations.getTotalElements());
-    }
+                                        List<String> seatLabels = batches.stream()
+                                                        .map(b -> b.seatResDTO().rowLabel()
+                                                                        + b.seatResDTO().columnNumber())
+                                                        .toList();
 
+                                        BigDecimal totalPrice = unitPrice
+                                                        .multiply(BigDecimal.valueOf(seatLabels.size()));
 
-    private void assertSeatsNotLocked(UUID sessionId, List<UUID> seatIds) {
+                                        return new ReservationResDTO(
+                                                        r.getId(),
+                                                        title,
+                                                        totalPrice,
+                                                        r.getStatus().toString(),
+                                                        start,
+                                                        end,
+                                                        seatLabels,
+                                                        r.getUserId());
+                                }).toList();
+
+                return new PageImpl<>(listReservationRes,
+                                pageable,
+                                reservations.getTotalElements());
+        }
+
+        private void assertSeatsNotLocked(UUID sessionId, List<UUID> seatIds) {
                 for (UUID seatId : seatIds) {
                         if (redisService.isSeatLocked(sessionId, seatId.toString())) {
                                 throw new SeatUnavailableException(String.format(
@@ -191,21 +217,27 @@ public class ReservationService {
                 return updated > 0;
         }
 
-        private List<Reservation> buildPendingReservations(CreateReservationDTO dto,
+        private Reservation buildPendingReservation(CreateReservationDTO dto,
                         List<UUID> seatIds,
                         String userId) {
 
                 UUID userUuid = UUID.fromString(userId);
-                return seatIds.stream()
-                                .map(seatId -> {
-                                        Reservation reservation = new Reservation();
-                                        reservation.setUserId(userUuid);
-                                        reservation.setSessionId(dto.sessionId());
-                                        reservation.setSeatId(seatId);
-                                        reservation.setStatus(ReserveState.PENDING_PAYMENT);
-                                        return reservation;
-                                })
-                                .toList();
+
+                Reservation reservation = new Reservation();
+                reservation.setUserId(userUuid);
+                reservation.setSessionId(dto.sessionId());
+                reservation.setStatus(ReserveState.PENDING_PAYMENT);
+
+                List<Seats> seats = seatIds.stream()
+                                .map(seatId -> Seats.builder()
+                                                .seatId(seatId)
+                                                .sessionId(dto.sessionId())
+                                                .reservation(reservation)
+                                                .build())
+                                .collect(Collectors.toList());
+
+                reservation.setSeats(seats);
+                return reservation;
         }
 
         private void lockSeatsOrFail(UUID sessionId, List<UUID> seatIds, String userId) {
@@ -219,5 +251,4 @@ public class ReservationService {
                                         String.join(",", seatNumbers)));
                 }
         }
-
 }
