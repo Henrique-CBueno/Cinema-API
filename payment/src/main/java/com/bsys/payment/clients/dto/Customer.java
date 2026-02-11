@@ -8,6 +8,10 @@ public record Customer(String id,
 
                         String keycloakUserId,
 
+                        String name,
+
+                        String email,
+
                         String phone,
 
                         String customerId,
