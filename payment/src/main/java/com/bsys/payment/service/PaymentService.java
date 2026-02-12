@@ -49,7 +49,6 @@ public class PaymentService {
 
         BillingRequestDTO cobranca = getBillingRequestDTO(currentCustomer, reservationDTO);
 
-
         return paymentClient.createBilling(cobranca);
     }
 
@@ -63,7 +62,7 @@ public class PaymentService {
                 "https://henriquebueno.com",
                 "https://henriquebueno.com",
                 currentCustomer.getCustomerId(),
-                UUID.fromString(currentCustomer.getKeycloakUserId())
+                reservationDTO.reservationId()
         );
     }
 
