@@ -71,3 +71,7 @@ integration:
   payment:
     url: ${PAYMENT_EXTERNAL_URL:https://teste.com}
     api-key: ${PAYMENT_EXTERNAL_API_KEY:fdadfw}
+
+sns:
+  exchanges:
+    reservation_paid: reservation-topic
