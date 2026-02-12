@@ -17,6 +17,10 @@ resource "aws_sns_topic" "reservation_fanout" {
   name = "reservation-topic"
 }
 
+resource "aws_sns_topic" "notification_events" {
+  name = "notification-topic"
+}
+
 # 2. Filas SQS
 resource "aws_sqs_queue" "reservation_paid" {
   name = "reservation_paid"
@@ -41,6 +45,13 @@ resource "aws_sns_topic_subscription" "notification_subscription" {
   raw_message_delivery = true
 }
 
+resource "aws_sns_topic_subscription" "notification_event_subscription" {
+  topic_arn = aws_sns_topic.notification_events.arn
+  protocol  = "sqs"
+  endpoint  = aws_sqs_queue.reservation_notification.arn
+  raw_message_delivery = true
+}
+
 # 4. Políticas de Acesso (Permitir que o SNS envie para o SQS)
 resource "aws_sqs_queue_policy" "sns_to_sqs_policy" {
   for_each = {
@@ -60,7 +71,7 @@ resource "aws_sqs_queue_policy" "sns_to_sqs_policy" {
       "Action": "sqs:SendMessage",
       "Resource": "*",
       "Condition": {
-        "ArnEquals": { "aws:SourceArn": "${aws_sns_topic.reservation_fanout.arn}" }
+        "ArnEquals": { "aws:SourceArn": ["${aws_sns_topic.reservation_fanout.arn}", "${aws_sns_topic.notification_events.arn}"] }
       }
     }
   ]
