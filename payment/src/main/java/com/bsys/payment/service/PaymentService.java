@@ -58,7 +58,7 @@ public class PaymentService {
                 "ONE_TIME",
                 List.of(PaymentsMethods.PIX),
                 List.of(getProduct(reservationDTO)),
-                1000,
+                60,
                 "https://henriquebueno.com",
                 "https://henriquebueno.com",
                 currentCustomer.getCustomerId(),

@@ -86,4 +86,24 @@ public interface ReservationRepository extends JpaRepository<Reservation, UUID> 
         int cancelSeat(@Param("reservationId") UUID reservationId,
                         @Param("userId") UUID userId,
                         @Param("isAdmin") boolean isAdmin);
+
+        @Modifying
+        @Transactional
+        @Query("""
+                            UPDATE Reservation r
+                            SET r.status = 'CONFIRMED'
+                            WHERE r.id = :reservationId
+                            AND r.status = 'PENDING_PAYMENT'
+                        """)
+        int setReservePaid(@Param("reservationId") UUID reservationId);
+
+        @Modifying
+        @Transactional
+        @Query("""
+                            UPDATE Seats s
+                            SET s.status = 'CONFIRMED'
+                            WHERE s.reservation.id = :reservationId
+                            AND s.status = 'PENDING_PAYMENT'
+                        """)
+        int setSeatPaid(@Param("reservationId") UUID reservationId);
 }

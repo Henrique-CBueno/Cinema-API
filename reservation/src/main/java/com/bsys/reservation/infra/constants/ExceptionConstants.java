@@ -10,4 +10,5 @@ public class ExceptionConstants {
     public static String RESERVATIONS_NOT_FOUND = "Não foram achadas reservas";
     public static String RESERVATIONS_WITH_ID_NOT_FOUND = "Não foram achadas reservas confirmadas com id %s";
     public static String SEAT_VALIDATION_FAILED = "Nao foi possivel validar os assentos";
+    public static String WEBHOOK_SECRET_NOT_VALID = "A chave secreta do webhook esta incorreta";
 }
