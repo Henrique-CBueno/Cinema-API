@@ -75,3 +75,4 @@ integration:
 sns:
   exchanges:
     reservation_paid: reservation-topic
+    notification-topic: notification-topic

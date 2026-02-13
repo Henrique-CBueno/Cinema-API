@@ -16,6 +16,7 @@ public record BillingSuccessResponse(Data data,
             List<String> methods,
             List<ResponseProduct> products,
             String frequency,
+            String externalId,
             int amount, // Valor total em centavos
             String nextBilling, // Pode ser uma data ISO ou "null"
             ResponseCustomer customer,

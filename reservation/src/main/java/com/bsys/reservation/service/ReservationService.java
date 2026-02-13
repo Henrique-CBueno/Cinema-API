@@ -92,7 +92,6 @@ public class ReservationService {
                         throw new ReservationPersistenceException(ExceptionConstants.RESERVATION_ALREADY_EXISTS, ex);
                 }
 
-                lockSeatsOrFail(dto.sessionId(), seatIds, userId);
 
                 BigDecimal totalPrice = session.price().multiply(BigDecimal.valueOf(seatIds.size()));
                 List<String> seatsAsString = seatIds.stream().map(UUID::toString).toList();
@@ -107,6 +106,8 @@ public class ReservationService {
                                 seatsAsString,
                                 saved.getUserId()),
                         userId).getBody().data();
+
+                lockSeatsOrFail(dto.sessionId(), seatIds, userId);
 
             return billing;
         }
@@ -201,20 +202,7 @@ public class ReservationService {
         }
 
     private static @NonNull List<BatchReserveReqDTO> getBatchReserveReqDTOS(List<Reservation> reservationsContent) {
-        List<BatchReserveReqDTO> batchRequests = new ArrayList<>();
-
-        for (Reservation r : reservationsContent) {
-                if (r.getSeats() != null) {
-                        for (Seats s : r.getSeats()) {
-                                batchRequests.add(new BatchReserveReqDTO(
-                                                r.getId(),
-                                                r.getSessionId(),
-                                                s.getSeatId(),
-                                                r.getUserId()));
-                        }
-                }
-        }
-        return batchRequests;
+        return getBatchReserveReqDTOS(reservationsContent);
     }
 
     private void assertSeatsNotLocked(UUID sessionId, List<UUID> seatIds) {
@@ -278,4 +266,12 @@ public class ReservationService {
                                         String.join(",", seatNumbers)));
                 }
         }
+
+    public Reservation getReservationById(UUID uuid) {
+
+            return reservationRepository.findById(uuid)
+                    .orElseThrow(() -> new ReservationsNotFound(String.format(
+                            ExceptionConstants.RESERVATIONS_WITH_ID_NOT_FOUND,
+                            uuid)));
+    }
 }

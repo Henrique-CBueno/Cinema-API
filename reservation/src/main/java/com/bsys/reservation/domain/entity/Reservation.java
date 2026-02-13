@@ -34,6 +34,8 @@ public class Reservation {
     @Column(nullable = false)
     ReserveState status;
 
+    boolean consumed = false;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 

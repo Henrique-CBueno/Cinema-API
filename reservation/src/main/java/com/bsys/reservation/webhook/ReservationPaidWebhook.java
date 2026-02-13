@@ -16,7 +16,6 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Objects;
@@ -47,7 +46,7 @@ public class ReservationPaidWebhook {
 
         PaidDTO payload = objectMapper.readValue(rawBody, PaidDTO.class);
 
-        webhookService.paid(payload.data().billing().products().getFirst().externalId());
+        webhookService.handleRawPayment(payload.data().billing().products().get(0).externalId());
 
         return ResponseEntity.ok().build();
     }

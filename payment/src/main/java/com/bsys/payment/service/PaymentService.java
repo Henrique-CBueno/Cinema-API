@@ -40,6 +40,8 @@ public class PaymentService {
                     currentCustomer.getEmail(),
                     currentCustomer.getTaxId()));
 
+            if (paymentCustomer.data() == null) throw new RuntimeException(paymentCustomer.toString());
+
             customerClient.updateCustomerId(userId , new UpdateCustomerIdDTO(
                     paymentCustomer.data().id()
             ));

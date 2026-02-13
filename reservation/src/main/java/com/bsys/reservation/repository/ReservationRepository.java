@@ -106,4 +106,16 @@ public interface ReservationRepository extends JpaRepository<Reservation, UUID> 
                             AND s.status = 'PENDING_PAYMENT'
                         """)
         int setSeatPaid(@Param("reservationId") UUID reservationId);
+        @Query("SELECT r FROM Reservation r LEFT JOIN FETCH r.seats WHERE r.id IN :ids")
+        List<Reservation> findAllByIdWithSeats(@Param("ids") List<UUID> ids);
+
+        @Modifying
+        @Transactional
+        @Query("""
+                            UPDATE Reservation r
+                            SET r.consumed = true
+                            WHERE r.id = :reservationId
+                            AND r.status = 'CONFIRMED'
+                        """)
+        void setConsumed(@Param("reservationId") UUID reservationId);
 }
