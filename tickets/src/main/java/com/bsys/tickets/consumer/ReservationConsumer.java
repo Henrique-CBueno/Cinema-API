@@ -14,6 +14,6 @@ public class ReservationConsumer {
     @SqsListener("${sqs.queue.reservation_paid}")
     public void listen(ReservationPaidConsumerDTO message) {
 
-        log.info("message received: {}", message.content());
+        log.info("message received: {}", message.toString());
     }
 }
