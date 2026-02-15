@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ReservationService {
 
-        // TODO notificar etapas da reserva
+        // TODO notificar etapas da reserva ,.
 
         private final SessionClient sessionClient;
         private final SeatsClient seatsClient;
