@@ -21,6 +21,15 @@ import com.bsys.reservation.infra.exceptions.SeatAlreadyReservedException;
 import com.bsys.reservation.infra.exceptions.ReservationsNotFound;
 import com.bsys.reservation.infra.padronize.SuccessResponse;
 import com.bsys.reservation.repository.ReservationRepository;
+import com.bsys.reservation.clients.customer.CustomerClient;
+import com.bsys.reservation.clients.customer.Customer;
+import com.bsys.reservation.publisher.SnsPublisherService;
+import com.bsys.reservation.publisher.SnsPublisherExchanges;
+import com.bsys.reservation.publisher.dto.ReservationPaidConsumerDTO;
+import com.bsys.reservation.publisher.dto.ReservationNotificationDTO;
+import com.bsys.reservation.publisher.dto.CustomerDTO;
+import com.bsys.reservation.infra.constants.MessageConstants;
+import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
@@ -41,14 +50,15 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ReservationService {
 
-        // TODO notificar etapas da reserva ,.
-
         private final SessionClient sessionClient;
         private final SeatsClient seatsClient;
         private final RedisService redisService;
         private final ReservationRepository reservationRepository;
         private final BatchClient batchClient;
+
         private final PaymentClient paymentClient;
+        private final CustomerClient customerClient;
+        private final SnsPublisherService snsPublisherService;
 
         @Transactional
         public BillingSuccessResponse createReservation(CreateReservationDTO dto,
@@ -110,6 +120,27 @@ public class ReservationService {
                         userId).getBody().data();
 
                 lockSeatsOrFail(dto.sessionId(), seatIds, userId);
+
+                try {
+                    Customer customer = Objects.requireNonNull(customerClient.getCustomerById(userId).getBody()).data();
+                    
+                    String formattedDateHour = session.startTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+                    String message = String.format(MessageConstants.MESSAGE, customer.name(), formattedDateHour, "Criada");
+
+                    ReservationNotificationDTO notificationDTO = new ReservationNotificationDTO(
+                            saved.getId().toString(),
+                            new CustomerDTO(customer.name(), customer.taxId(), customer.email(), "+55" + customer.phone().replaceAll("\\D", "")),
+                            session.movie().title(),
+                            formattedDateHour,
+                            "PENDING",
+                            message
+                    );
+                    
+                    snsPublisherService.sendMessage(SnsPublisherExchanges.NOTIFICATION_TOPIC_EXCHANGE, new ReservationPaidConsumerDTO<>(notificationDTO));
+                    
+                } catch (Exception e) {
+                    log.error("Failed to send reservation notification", e);
+                }
 
             return billing;
         }
