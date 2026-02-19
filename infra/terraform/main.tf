@@ -9,7 +9,10 @@ provider "aws" {
   endpoints {
     sns = "http://localhost:4566"
     sqs = "http://localhost:4566"
+    s3  = "http://localhost:4566"
   }
+  
+  s3_use_path_style = true
 }
 
 # 1. Tópico SNS (O Fan-out)
@@ -77,4 +80,9 @@ resource "aws_sqs_queue_policy" "sns_to_sqs_policy" {
   ]
 }
 POLICY
+}
+
+# 5. S3 Bucket
+resource "aws_s3_bucket" "cinema_tickets" {
+  bucket = "cinema-tickets-bucket"
 }
